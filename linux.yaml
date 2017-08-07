@@ -146,7 +146,7 @@ resources:
             wget 10.50.21.22/linux/mbroken.zip -O /usr/share/cctc/mbroken.zip
             wget 10.50.21.22/linux/mbrgood.zip -O /usr/share/cctc/mbrgood.zip
             wget 10.50.21.22/linux/NMAP_all_hosts.txt -O /usr/share/cctc/NMAP_all_hosts.txt
-            wget 10.50.21.22/linux/LEMARCHAND.zip -O /usr/share/cctc/LEMARCHAND.zip
+            wget 10.50.21.22/linux/MYSTERIOUS_FILE -O /usr/share/cctc/MYSTERIOUS_FILE
             wget 10.50.21.22/linux/sorted.zip -O /usr/share/cctc/sorted.zip
             wget 10.50.21.22/linux/rootkits.zip -O /usr/share/cctc/rootkits.zip
             wget 10.50.21.22/linux/sudo_bad -O /usr/share/cctc/sudo_bad
