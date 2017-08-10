@@ -4,10 +4,10 @@ Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
 Install-ADDSForest `
 -CreateDnsDelegation:$false `
 -DatabasePath 'C:\Windows\NTDS' `
--DomainMode 'Win2012R2' `
+-DomainMode '7' `
 -DomainName 'army.warriors' `
 -DomainNetbiosName 'ARMY' `
--ForestMode 'Win2012R2' `
+-ForestMode '7' `
 -SafeModeAdministratorPassword (ConvertTo-SecureString -String 'PassWord12345!!' -AsPlainText -Force) `
 -InstallDns:$true `
 -LogPath 'C:\Windows\NTDS' `
