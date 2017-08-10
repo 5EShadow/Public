@@ -128,8 +128,6 @@ resources:
           template: |
             #ps1_sysnative
             $ErrorActionPreference = 'SilentlyContinue'
-            reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 1 /f
-            Get-Service -Name TermService | Stop-Service -Force
             net user Administrator PassWord12345!!
             Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "AutoAdminLogon" -PropertyType DWord -Value 1
             Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultUserName" -PropertyType String -Value "Administrator"
