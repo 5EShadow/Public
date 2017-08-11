@@ -107,7 +107,7 @@ resources:
     properties:
       name:
         str_replace:
-          template: servername_All_The_Things
+          template: All_The_Things
           params:
             lastname: { get_param: server_name }
       image: Debian LXDE
@@ -123,7 +123,7 @@ resources:
             useradd -m -G sudo zeus
             export DEBIAN_FRONTEND=noninteractive
             apt-get update
-            apt-get -y install locate dnsutils lsof aptitude ftp auditd telnet samba git zip unzip figlet hexedit tree apache2 gcc tcc
+            apt-get -y install locate dnsutils lsof aptitude ftp auditd telnet samba git zip unzip figlet hexedit tree apache2 gcc tcc netcat
             apt-get -y install qemu
             apt-get upgrade
             updatedb
