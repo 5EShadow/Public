@@ -132,7 +132,7 @@ resources:
             #useradd -m -G sudo Instructor
             export DEBIAN_FRONTEND=noninteractive
             apt-get update
-            apt-get -y install locate dnsutils lsof aptitude ftp steghide auditd telnet figlet hexedit tree dos2unix gnome-terminal zip unzip apache2 gcc tcc
+            apt-get -y install locate dnsutils lsof aptitude ftp steghide auditd telnet figlet hexedit tree dos2unix gnome-terminal zip unzip apache2 gcc tcc netcat
             apt-get upgrade
             updatedb
             mandb
