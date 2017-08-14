@@ -374,4 +374,6 @@ resources:
             net localgroup administrators /add Bill
             net user /add Susan RediculaslyLongPassWordOMG!! /y
             net user /add Robert PassWord123 /y
+            netsh advfirewall set allprofiles state on
+            netsh advfirewall firewall add rule name="Firewall open to attack" dir=in action=allow protocol=ANY remoteip=10.StudentID.0.1
       user_data_format: RAW
