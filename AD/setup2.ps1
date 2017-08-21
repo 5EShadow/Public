@@ -978,9 +978,9 @@ Add-ADGroupMember "CN=System Admins,CN=Users,DC=army,DC=warriors" -Members "CN=P
 Add-ADGroupMember "CN=Print Server Group,CN=Users,DC=army,DC=warriors" -Members "CN=Power Users,CN=Users,DC=army,DC=warriors"
 Add-ADGroupMember "CN=Power Users,CN=Users,DC=army,DC=warriors" -Members "CN=System Admins LV2,CN=Users,DC=army,DC=warriors"
 
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/D4NP0UL1N/Public/master/AD/lulz.pdf" -OutFile "C:\WarriorShare\Brigade HQ\CMD GRP\lulz.pdf"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/D4NP0UL1N/Public/master/AD/14287.pdf" -OutFile "C:\WarriorShare\Brigade HQ\S-6\14287.pdf"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/D4NP0UL1N/Public/master/AD/Domain CLI Cheat-Sheet.docx" -OutFile "C:\WarriorShare\Brigade HQ\S-6\Domain CLI Cheat-Sheet.docx"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/D4NP0UL1N/Public/master/AD/phone_matrix.xlsx" -OutFile "C:\WarriorShare\3rd Battalion\Head Quarters\CMD GRP\phone_matrix.xlsx"
+Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/lulz.pdf" -OutFile "C:\WarriorShare\Brigade HQ\CMD GRP\lulz.pdf"
+Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/14287.pdf" -OutFile "C:\WarriorShare\Brigade HQ\S-6\14287.pdf"
+Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/Domain CLI Cheat-Sheet.docx" -OutFile "C:\WarriorShare\Brigade HQ\S-6\Domain CLI Cheat-Sheet.docx"
+Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/phone_matrix.xlsx" -OutFile "C:\WarriorShare\3rd Battalion\Head Quarters\CMD GRP\phone_matrix.xlsx"
 
-Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" "setup2" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\windows\system32\start.ps1"'
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" "start" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\windows\system32\start.ps1"'
