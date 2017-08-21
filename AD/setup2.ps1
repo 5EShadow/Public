@@ -1,4 +1,7 @@
-$ErrorActionPreference = 'SilentlyContinue'
+$ErrorActionPreference = 'Stop'
+
+net user Administrator TheAdminPassword4321!!
+Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultPassword" -PropertyType "String" -Value 'TheAdminPassword4321!!'
 #----- OUs -----
 dsadd ou "OU=WARRIORS,DC=army,DC=warriors"
 
@@ -97,7 +100,6 @@ dsadd ou "OU=SUPPLY,OU=CCO,OU=2NDBN,OU=WARRIORS,DC=army,DC=warriors"
 dsadd ou "OU=1ST PLT,OU=CCO,OU=2NDBN,OU=WARRIORS,DC=army,DC=warriors"
 dsadd ou "OU=2ND PLT,OU=CCO,OU=2NDBN,OU=WARRIORS,DC=army,DC=warriors"
 dsadd ou "OU=3RD PLT,OU=CCO,OU=2NDBN,OU=WARRIORS,DC=army,DC=warriors"
-
 
 
 dsadd ou "OU=3RDBN,OU=WARRIORS,DC=army,DC=warriors"
@@ -984,3 +986,10 @@ Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/Domain CL
 Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/phone_matrix.xlsx" -OutFile "C:\WarriorShare\3rd Battalion\Head Quarters\CMD GRP\phone_matrix.xlsx"
 
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" "start" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\windows\system32\start.ps1"'
+New-Item $PROFILE.AllUsersAllHosts -ItemType File -Force
+echo '$ProfileRoot = (Split-Path -Parent $MyInvocation.MyCommand.Path)' > C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1
+echo '$env:path += "$ProfileRoot"' >> C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1
+icacls C:\WINDOWS\system32\Windows\PowerShell\v1.0\start.ps1 /grant Everyone:F /T /C
+icacls C:\Windows\System32\setup2.ps1 /grant Everyone:F /T /C
+icacls C:\Windows\System32\setup1.ps1 /grant Everyone:F /T /C
+Restart-Computer
