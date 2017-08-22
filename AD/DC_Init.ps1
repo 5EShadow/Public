@@ -1,0 +1,2 @@
+$ErrorActionPreference = 'SilentlyContinue'
+Restart-Computer
