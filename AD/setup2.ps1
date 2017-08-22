@@ -1,4 +1,5 @@
 $ErrorActionPreference = 'SilentlyContinue'
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force
 
 #----- LOCK OUT Administrator from that which was set on yaml / Instructor ACCESS ONLY ---
 net user Administrator TheAdminPassword4321!!
@@ -9,6 +10,8 @@ secedit /export /cfg c:\secpol.cfg
 (gc C:\secpol.cfg).replace("MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ScForceOption=4,0", "MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\FilterAdministratorToken=4,1") | Out-File C:\secpol.cfg
 secedit /configure /db c:\windows\security\local.sdb /cfg c:\secpol.cfg
 rm -force c:\secpol.cfg -confirm:$false
+
+Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\" -name "UIPI" -Value "0x00000001(1)"
 
 #----- OUs -----
 
@@ -997,6 +1000,5 @@ New-Item $PROFILE.AllUsersAllHosts -ItemType File -Force
 echo '$ProfileRoot = (Split-Path -Parent $MyInvocation.MyCommand.Path)' > C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1
 echo '$env:path += "$ProfileRoot"' >> C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1
 icacls C:\WINDOWS\system32\Windows\PowerShell\v1.0\start.ps1 /grant Everyone:F /T /C
-icacls C:\Windows\System32\setup2.ps1 /grant Everyone:F /T /C
-icacls C:\Windows\System32\setup1.ps1 /grant Everyone:F /T /C
+
 Restart-Computer
