@@ -3,11 +3,17 @@ $ErrorActionPreference = 'SilentlyContinue'
 #----- LOCK OUT Administrator from that which was set on yaml / Instructor ACCESS ONLY ---
 net user Administrator TheAdminPassword4321!!
 Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultPassword" -PropertyType "String" -Value 'TheAdminPassword4321!!'
+
+#----- Enbale Local Admin to use internet ---
+secedit /export /cfg c:\secpol.cfg
+(gc C:\secpol.cfg).replace("MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ScForceOption=4,0", "MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\FilterAdministratorToken=4,1") | Out-File C:\secpol.cfg
+secedit /configure /db c:\windows\security\local.sdb /cfg c:\secpol.cfg
+rm -force c:\secpol.cfg -confirm:$false
+
 #----- OUs -----
+
 dsadd ou "OU=WARRIORS,DC=army,DC=warriors"
-
 dsadd ou "OU=HQ,OU=WARRIORS,DC=army,DC=warriors"
-
 dsadd ou "OU=STAFF,OU=HQ,OU=WARRIORS,DC=army,DC=warriors"
 dsadd ou "OU=CMD GRP,OU=STAFF,OU=HQ,OU=WARRIORS,DC=army,DC=warriors"
 dsadd ou "OU=Legal,OU=STAFF,OU=HQ,OU=WARRIORS,DC=army,DC=warriors"
@@ -953,8 +959,8 @@ dsmod user "CN=Layne Krause,OU=1ST PLT,OU=CCO,OU=2NDBN,OU=WARRIORS,DC=army,DC=wa
 dsmod user "CN=Mathew Page,OU=3RD PLT,OU=CCO,OU=2NDBN,OU=WARRIORS,DC=army,DC=warriors" -acctexpires 1
 
 # set inapropriate account descriptions
-dsmod user "CN=Krystal Jimenez,OU=S-1,OU=STAFF,OU=HQ,OU=WARRIORS,DC=army,DC=warriors" -desc ' ♥♥♥ Brigade S-1 ACTIONS NCOIC ♥♥♥ '
-dsmod user "CN=Angelo Berry,OU=S-6,OU=STAFF,OU=HQ,OU=WARRIORS,DC=army,DC=warriors" -desc ' ♦ Brigade S-6 Automations NCO ♦ '
+dsmod user "CN=Krystal Jimenez,OU=S-1,OU=STAFF,OU=HQ,OU=WARRIORS,DC=army,DC=warriors" -desc ' $$$ Brigade S-1 ACTIONS NCOIC $$$ '
+dsmod user "CN=Angelo Berry,OU=S-6,OU=STAFF,OU=HQ,OU=WARRIORS,DC=army,DC=warriors" -desc ' *** Brigade S-6 Automations NCO *** '
 
 # set Skylar Reynolds < AshleyMadison eMail
 dsmod user "CN=Skylar Reynolds,OU=3RD PLT,OU=CCO,OU=2NDBN,OU=WARRIORS,DC=army,DC=warriors" -email "Skyler01@ashleymadison.com"
@@ -986,7 +992,7 @@ Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/14287.pdf
 Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/Domain CLI Cheat-Sheet.docx" -OutFile "C:\WarriorShare\Brigade HQ\S-6\Domain CLI Cheat-Sheet.docx"
 Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/phone_matrix.xlsx" -OutFile "C:\WarriorShare\3rd Battalion\Head Quarters\CMD GRP\phone_matrix.xlsx"
 
-Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" "start" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\windows\system32\start.ps1"'
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -name "start" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\windows\system32\WindowsPowerShell\v1.0\start.ps1"'
 New-Item $PROFILE.AllUsersAllHosts -ItemType File -Force
 echo '$ProfileRoot = (Split-Path -Parent $MyInvocation.MyCommand.Path)' > C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1
 echo '$env:path += "$ProfileRoot"' >> C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1
