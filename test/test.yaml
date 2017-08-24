@@ -112,7 +112,7 @@ resources:
           template: lastname-Kali
           params:
             lastname: { get_param: last_name }
-      image: f0b4f744-4311-41ee-bf40-30bdce93097d
+      image: 0e2eaa9b-30e7-4d6f-9e8b-2adfbcb12b04
       flavor: cy.medium
       networks: 
         - port: { get_resource: host1-port }
