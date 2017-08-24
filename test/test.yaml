@@ -109,10 +109,10 @@ resources:
     properties:
       name:
         str_replace:
-          template: lastname-Kali
+          template: lastname-Metasploitable 2
           params:
             lastname: { get_param: last_name }
-      image: 0e2eaa9b-30e7-4d6f-9e8b-2adfbcb12b04
+      image: Metasploitable 2
       flavor: cy.medium
       networks: 
         - port: { get_resource: host1-port }
@@ -120,57 +120,6 @@ resources:
         str_replace:
           template: |
             #!/bin/bash            
-            echo 127.0.0.1 $(hostname) >> /etc/hosts
-            export DEBIAN_FRONTEND=noninteractive
-            #!/bin/bash
-            useradd $user -m -U -s /bin/bash
-            usermod -aG sudo $user
-            sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-            echo "root:$password" | chpasswd
-            echo "$user:$password" | chpasswd
-            reboot
-          params:
-            $user: { get_param: last_name }
-            $password: { get_param: password }
-            $studentID: { get_param: student_id }
-      user_data_format: RAW
-
-  host2-port:
-    type: OS::Neutron::Port
-    properties:
-      network_id: { get_resource: stu-network }
-      fixed_ips:
-        - subnet_id: { get_resource: stu-subnet }
-          ip_address:
-            str_replace:
-              template: 10.studentID.0.2
-              params:
-                studentID: { get_param: student_id }
-      port_security_enabled: false
-
-  host2:
-    type: OS::Nova::Server
-    properties:
-      name:
-        str_replace:
-          template: lastname-Debian-Headless
-          params:
-            lastname: { get_param: last_name }
-      image: Debian Stretch
-      flavor: cy.small
-      networks: 
-        - port: { get_resource: host2-port }
-      user_data: 
-        str_replace:
-          template: |
-            #!/bin/bash            
-            echo 127.0.0.1 $(hostname) >> /etc/hosts
-            export DEBIAN_FRONTEND=noninteractive
-            useradd $user -m -U -s /bin/bash
-            usermod -aG sudo $user
-            sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-            echo "root:$password" | chpasswd
-            echo "$user:$password" | chpasswd
             reboot
           params:
             $user: { get_param: last_name }
