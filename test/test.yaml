@@ -113,7 +113,7 @@ resources:
           params:
             lastname: { get_param: last_name }
       image: Metasploitable 2
-      flavor: cy.medium
+      flavor: cy.large
       networks: 
         - port: { get_resource: host1-port }
       user_data: 
