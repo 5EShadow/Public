@@ -99,7 +99,7 @@ resources:
       
   float_ip_1:
     type: OS::Neutron::FloatingIP
-    depends_on: external_router
+    depends_on: stu-router
     properties: { floating_network: public }
 
   float_port_1:
@@ -183,7 +183,7 @@ resources:
   
   float_ip_2:
     type: OS::Neutron::FloatingIP
-    depends_on: external_router
+    depends_on: stu-router
     properties: { floating_network: public }
 
   float_port_2:
