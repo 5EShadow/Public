@@ -25,11 +25,11 @@ parameters:
     label: Password
     description: Set root/admin password for instances
     hidden: true
-    default: password
+    default:
     constraints:
       -  length: { min: 8, max: 20 }
          description: Password must be between 8 and 20 characters
-      -  allowed_pattern: "[a-zA-Z0-9]*"
+      -  allowed_pattern: "[a-zA-Z]*"
          description: Password may not contain special characters
 
 resources:
@@ -109,10 +109,10 @@ resources:
     properties:
       name:
         str_replace:
-          template: lastname-Debian-GUI
+          template: lastname-Ubuntu 16.04
           params:
             lastname: { get_param: last_name }
-      image: Debian LXDE
+      image: Ubuntu 16.04
       flavor: cy.medium
       networks: 
         - port: { get_resource: host1-port }
@@ -121,25 +121,42 @@ resources:
           template: |
             #!/bin/bash            
             echo 127.0.0.1 $(hostname) >> /etc/hosts
-            export DEBIAN_FRONTEND=noninteractive
+            # export DEBIAN_FRONTEND=noninteractive
             apt-get -y update
-            apt-get -y install locate dnsutils lsof aptitude ftp auditd telnet samba git zip unzip figlet hexedit tree apache2 gcc tcc
-            apt-get -y install build-essential libreadline-dev libssl-dev libpq5 libpq-dev libreadline5 libsqlite3-dev libpcap-dev git-core
-            apt-get -y install autoconf postgresql pgadmin3 curl zlib1g-dev libxml2-dev libxslt1-dev libyaml-dev
-            apt-get -y install nmap python-setuptools python-dev build-essential hydra hydra-gtk john xrdp tigervnc-standalone-server netcat firefox figlet
-            apt-get -y install qemu
+            pkg_array=({install locate dnsutils lsof aptitude ftp auditd telnet samba git zip unzip figlet hexedit tree apache2 gcc tcc install build-essential libreadline-dev libssl-dev libpq5 libpq-dev libreadline5 libsqlite3-dev libpcap-dev git-core install autoconf postgresql pgadmin3 curl zlib1g-dev libxml2-dev libxslt1-dev libyaml-dev install nmap python-setuptools python-dev build-essential hydra hydra-gtk john xrdp tigervnc-standalone-server netcat firefox figlet})
+            for x in ${pkg_array[@]}; do apt-get install -y $x; done
+            apt-get -y install qemu && apt-get -y install qemu
             apt-get -y upgrade
             updatedb
             mandb
-            useradd $user -m -U -G sudo -s /bin/bash
-            useradd -m zeus -U -G sudo -s /bin/bash
+            mkdir /usr/share/cctc
+            wget -r -l 1 -nH -nd -R "index.html*","*.gif","*.pyc","banner.*" 10.50.x.x/linux/ -P /usr/share/cctc/
+            wget 10.50.x.x/linux/check.pyc -O /usr/share/cctc/check.pyc
+            wget 10.50.x.x/linux/banner.sh -O /usr/share/cctc/banner.sh
+            cat > /usr/share/misc/check_script.sh << "__EOF__"
+            #!/bin/bash
+            /usr/bin/env python /usr/share/misc/check.pyc
+            __EOF__
+            echo 'alias check="/usr/share/misc/check_script.sh"' >> /etc/bash.bashrc
+            chmod +x /usr/share/cctc/*
+            chmod +x /usr/share/cctc/{check.pyc,banner.sh,check_script.sh}
             sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-            sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+            sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
             sed -i 's/#Port 22/Port 22/' /etc/ssh/sshd_config
             service ssh restart
+            useradd $user -m -U -G sudo -s /bin/bash
+            useradd -m zeus -U -G sudo -s /bin/bash
             echo "root:password" | chpasswd
             echo "$user:$password" | chpasswd
             echo "zeus:password" | chpasswd
+            easy_install pip
+            pip install pefile capstone
+            git clone https://github.com/g0tmi1k/exe2hex.git /usr/share/exe2hex
+            git clone https://github.com/1aN0rmus/TekDefense-Automater.git /usr/share/automater
+            git clone https://github.com/secretsquirrel/the-backdoor-factory.git /usr/share/backdoor
+            git clone https://github.com/Veil-Framework/Veil.git /usr/share/veil
+            /usr/share/Veil/setup/setup.sh -c
+            git clone https://github.com/danielmiessler/SecList.git /usr/share/seclists
             reboot
           params:
             $user: { get_param: last_name }
