@@ -148,9 +148,9 @@ resources:
             updatedb
             mandb
             mkdir /usr/share/cctc
-            wget -r -l 1 -nH -nd -R "index.html*","*.gif","*.pyc","banner.*" 10.50.x.x/linux/ -P /usr/share/cctc/
-            wget 10.50.x.x/linux/check.pyc -O /usr/share/cctc/check.pyc
-            wget 10.50.x.x/linux/banner.sh -O /usr/share/cctc/banner.sh
+            wget -r -l 1 -nH -nd -R "index.html*","*.gif","*.pyc","banner.*" 10.50.20.28/linux/ -P /usr/share/cctc/
+            wget 10.50.20.28/linux/check.pyc -O /usr/share/cctc/check.pyc
+            wget 10.50.20.28/linux/banner.sh -O /usr/share/cctc/banner.sh
             cat > /usr/share/misc/check_script.sh << "__EOF__"
             #!/bin/bash
             /usr/bin/env python /usr/share/misc/check.pyc
@@ -232,9 +232,9 @@ resources:
             updatedb
             mandb
             mkdir /usr/share/cctc
-            wget -r -l 1 -nH -nd -R "index.html*","*.gif","*.pyc","banner.*" 10.50.x.x/linux/ -P /usr/share/cctc/
-            wget 10.50.x.x/linux/check.pyc -O /usr/share/cctc/check.pyc
-            wget 10.50.x.x/linux/banner.sh -O /usr/share/cctc/banner.sh
+            wget -r -l 1 -nH -nd -R "index.html*","*.gif","*.pyc","banner.*" 10.50.20.28/linux/ -P /usr/share/cctc/
+            wget 10.50.20.28/linux/check.pyc -O /usr/share/cctc/check.pyc
+            wget 10.50.20.28/linux/banner.sh -O /usr/share/cctc/banner.sh
             cat > /usr/share/misc/check_script.sh << "__EOF__"
             #!/bin/bash
             /usr/bin/env python /usr/share/misc/check.pyc
