@@ -5,7 +5,7 @@ echo "administrator:DoDC0mp1!an7P@ssw0rd" | chpasswd
 apt-get install -y build-essential figlet nmap telnetd apache2 proftpd samba auditd tree netcat 
 
 #test user
-cat > /tmp/noshell.c <<"__EOF__"
+cat >> /tmp/noshell.c <<"__EOF__"
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
@@ -26,7 +26,7 @@ useradd -m -U -s /usr/noshell test
 echo "test:password" | chpasswd
 
 #critical research project
-cat > /home/bob/research.sh <<"__EOF__"
+cat >> /home/bob/research.sh <<"__EOF__"
 #!/bin/bash
 echo "This is research" > research
 while :
@@ -37,7 +37,7 @@ do
 done
 __EOF__
 chmod +x /home/bob/research.sh
-cat > /etc/init.d/research <<"__EOF__"
+cat >> /etc/init.d/research <<"__EOF__"
 #!/bin/bash
 
 ### BEGIN INIT INFO
@@ -65,7 +65,7 @@ update-rc.d research defaults
 
 
 
-cat > /var/www/html/index.html <<"__EOF__"
+cat >> /var/www/html/index.html <<"__EOF__"
 <html>
 This is a critical file that employees must have access to at all times.<br>
 If this web server goes down, the business fails.<br>
