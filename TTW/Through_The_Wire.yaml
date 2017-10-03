@@ -1,4 +1,4 @@
-heat_template_version: 2016-10-14
+heat_template_version: 2017-02-24
 
 description: Heat Template for Through The Wire Exer of CCTC - Provides base resources 2016 Server.
 
