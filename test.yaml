@@ -126,10 +126,7 @@ resources:
     properties:
       name:
         str_replace:
-          template: '
-          ___ ___ _  _ 
-           |   |  |/\|
-                    '
+          template: TEST
           params:
             lastname: { get_param: last_name }
       image: Ubuntu 16.04
