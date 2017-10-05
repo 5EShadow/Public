@@ -118,7 +118,7 @@ resources:
       image: Windows Server 2016
       name:
         str_replace:
-          template: lastname-Mystery
+          template:  (°_o)
           params:
             lastname: { get_param: last_name }
       networks:
