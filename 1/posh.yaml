@@ -134,7 +134,7 @@ resources:
             New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultPassword" -PropertyType String -Value 'PassWord12345!!'
             Invoke-WebRequest -Uri "https://raw.githubusercontent.com/D4NP0UL1N/Public/master/1/setup1.ps1" -OutFile "C:\windows\system32\setup1.ps1"
             Invoke-WebRequest -Uri "https://raw.githubusercontent.com/D4NP0UL1N/Public/master/1/setup2.ps1" -OutFile "C:\windows\system32\setup2.ps1"
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/D4NP0UL1N/Public/master/1/start.ps1" -OutFile "C:\windows\system32\start.ps1"
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/D4NP0UL1N/Public/master/1/start.ps1" -OutFile "C:\windows\system32\WindowsPowerShell\v1.0\start.ps1"
             Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" "setup1" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\windows\system32\setup1.ps1"'
             net user /add $user $password /y
             net localgroup administrators /add $user
