@@ -5,8 +5,8 @@ Install-ADDSForest `
 -CreateDnsDelegation:$false `
 -DatabasePath 'C:\Windows\NTDS' `
 -DomainMode '7' `
--DomainName 'dod.warriors' `
--DomainNetbiosName 'DOD' `
+-DomainName 'army.warriors' `
+-DomainNetbiosName 'ARMY' `
 -ForestMode '7' `
 -SafeModeAdministratorPassword (ConvertTo-SecureString -String 'PassWord12345!!' -AsPlainText -Force) `
 -InstallDns:$true `
