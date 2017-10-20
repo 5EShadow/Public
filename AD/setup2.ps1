@@ -3,7 +3,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force
 
 #----- LOCK OUT Administrator from that which was set on yaml / Instructor ACCESS ONLY ---
 net user Administrator TheAdminPassword4321!!
-Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultPassword" -PropertyType "String" -Value 'TheAdminPassword4321!!'
+Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultPassword" -Value 'TheAdminPassword4321!!'
 
 #----- Enbale Local Admin to use internet ---
 secedit /export /cfg c:\secpol.cfg
