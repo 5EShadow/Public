@@ -142,7 +142,6 @@ resources:
             apt-get -y update
             pkg_array=({locate,dnsutils,lsof,aptitude,ftp,auditd,telnet,samba,git,zip,unzip,figlet,hexedit,tree,apache2,gcc,tcc,build-essential,libreadline-dev,libssl-dev,libpq5,libpq-dev,libreadline5,libsqlite3-dev,libpcap-dev,git-core,autoconf,postgresql,pgadmin3,curl,zlib1g-dev,libxml2-dev,libxslt1-dev,libyaml-dev,nmap,python-setuptools,python-dev,build-essential,hydra,hydra-gtk,john,xrdp,tigervnc-standalone-server,netcat,firefox,figlet})
             for x in ${pkg_array[@]}; do apt-get install -y $x; done
-            apt-get -y install qemu && apt-get -y install qemu
             apt-get -y upgrade
             updatedb
             mandb
@@ -152,11 +151,25 @@ resources:
             service ssh restart
             useradd $user -m -U -G sudo -s /bin/bash
             useradd -m zeus -U -G sudo -s /bin/bash
-            echo "root:password" | chpasswd
-            echo "$user:$password" | chpasswd
-            echo "zeus:password" | chpasswd
+            echo "root:PassWord1234" | chpasswd
+            echo "$user:PassWord1234" | chpasswd
+            echo "zeus:PassWord1234" | chpasswd
             service apache2 start
-            wget
+            mkdir /var/www/html/{heat,windows,networking,linux,BASH}
+            mkdir -P /var/www/html/windows/.hidden/{Disorderly_Domain,TTW}
+            mkdir -P /var/www/html/linux/.hidden/Tight-Wire
+            git clone https://github.com/D4NP0UL1N/Public/AD.git /var/www/html/windows/.hidden/Disorderly_Domain/AD
+            cp /var/www/html/windows/.hidden/Disorderly_Domain/AD/* /var/www/html/windows/.hidden/Disorderly_Domain/
+            find /var/www/html/windows/.hidden/Disorderly_Domain/* -type f -name "*.yaml" -exec mv {} /var/www/html/heat/ \;
+            git clone https://github.com/D4NP0UL1N/Public/TTW.git /var/www/html/windows/.hidden/TTW/TTW-Temp
+            cp /var/www/html/windows/.hidden/TTW/TTW-Temp/* /var/www/html/windows/.hidden/TTW/
+            find /var/www/html/windows/.hidden/TTW/* -type f -name "*.yaml" -exec mv {} /var/www/html/heat/ \;
+            git clone https://github.com/D4NP0UL1N/Public/BASH.git /var/www/html/BASH/.hidden/BASH/BASH-Temp
+            cp /var/www/html/BASH/.hidden/BASH/BASH-Temp/* /var/www/html/BASH/.hidden/BASH/
+            find /var/www/html/BASH/.hidden/BASH/* -type f -name "*.yaml" -exec mv {} /var/www/html/heat/ \;
+            git clone https://github.com/D4NP0UL1N/Public/bins.git /var/www/html/linux/linux-Temp
+            cp /var/www/html/linux/linux-Temp/* /var/www/html/linux/
+            find /var/www/html/linux/* -type f -name "*.yaml" -exec mv {} /var/www/html/heat/ \;
             reboot
           params:
             $user: { get_param: last_name }
