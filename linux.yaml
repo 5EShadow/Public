@@ -1,4 +1,3 @@
-# heat_template_version: 2016-10-14
 heat_template_version: 2017-02-24
 
 description: Heat Template for Linux module of CCTC - Debian 16.04 and Ubuntu 16.04
@@ -26,7 +25,7 @@ parameters:
     label: Password
     description: Set root/admin password for instances
     hidden: true
-    default:
+    default: password
     constraints:
       -  length: { min: 8, max: 20 }
          description: Password must be between 8 and 20 characters
@@ -139,7 +138,6 @@ resources:
           template: |
             #!/bin/bash            
             echo 127.0.0.1 $(hostname) >> /etc/hosts
-            # export DEBIAN_FRONTEND=noninteractive
             apt-get -y update
             pkg_array=({install,locate,dnsutils,lsof,aptitude,ftp,auditd,telnet,samba,git,zip,unzip,figlet,hexedit,tree,apache2,gcc,tcc,build-essential,libreadline-dev,libssl-dev,libpq5,libpq-dev,libreadline5,libsqlite3-dev,libpcap-dev,git-core,install,autoconf,postgresql,pgadmin3,curl,zlib1g-dev,libxml2-dev,libxslt1-dev,libyaml-dev,nmap,python-setuptools,python-dev,build-essential,hydra,hydra-gtk,john,xrdp,tigervnc-standalone-server,netcat,firefox,figlet,ubuntu_desktop})
             for x in ${pkg_array[@]}; do apt-get install -y $x; done
@@ -148,9 +146,9 @@ resources:
             updatedb
             mandb
             mkdir /usr/share/cctc
-            wget -r -l 1 -nH -nd -R "index.html*","*.gif","*.pyc","banner.*" 10.50.x.x/linux/ -P /usr/share/cctc/
-            wget 10.50.x.x/linux/check.pyc -O /usr/share/cctc/check.pyc
-            wget 10.50.x.x/linux/banner.sh -O /usr/share/cctc/banner.sh
+            wget -r -l 1 -nH -nd -R "index.html*","*.gif","*.pyc","banner.*" 10.50.25.121/linux/ -P /usr/share/cctc/
+            wget 10.50.25.121/linux/check.pyc -O /usr/share/cctc/check.pyc
+            wget 10.50.25.121/linux/banner.sh -O /usr/share/cctc/banner.sh
             cat > /usr/share/misc/check_script.sh << "__EOF__"
             #!/bin/bash
             /usr/bin/env python /usr/share/misc/check.pyc
@@ -232,9 +230,9 @@ resources:
             updatedb
             mandb
             mkdir /usr/share/cctc
-            wget -r -l 1 -nH -nd -R "index.html*","*.gif","*.pyc","banner.*" 10.50.x.x/linux/ -P /usr/share/cctc/
-            wget 10.50.x.x/linux/check.pyc -O /usr/share/cctc/check.pyc
-            wget 10.50.x.x/linux/banner.sh -O /usr/share/cctc/banner.sh
+            wget -r -l 1 -nH -nd -R "index.html*","*.gif","*.pyc","banner.*" 10.50.25.121/linux/ -P /usr/share/cctc/
+            wget 10.50.25.121/linux/check.pyc -O /usr/share/cctc/check.pyc
+            wget 10.50.25.121/linux/banner.sh -O /usr/share/cctc/banner.sh
             cat > /usr/share/misc/check_script.sh << "__EOF__"
             #!/bin/bash
             /usr/bin/env python /usr/share/misc/check.pyc
