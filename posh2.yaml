@@ -106,7 +106,6 @@ resources:
 
   float_port_1:
     type: OS::Neutron::Port
-    depends_on: secgroup_0
     properties:
       network_id: { get_resource: net_0 }
       fixed_ips:
