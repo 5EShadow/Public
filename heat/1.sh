@@ -2,7 +2,10 @@
 echo 127.0.0.1 $(hostname) >> /etc/hosts
 useradd -m -U -G sudo -s /bin/bash administrator
 echo "administrator:DoDC0mp1!an7P@ssw0rd" | chpasswd
-apt-get install -y build-essential figlet nmap telnetd apache2 proftpd samba auditd tree netcat 
+apt-get -y update
+pkg_array=({install,locate,dnsutils,lsof,aptitude,ftp,auditd,telnet,git,zip,unzip,figlet,hexedit,tree,apache2,gcc,tcc,build-essential,libreadline-dev,libssl-dev,libpq5,libpq-dev,libreadline5,libsqlite3-dev,libpcap-dev,git-core,autoconf,pgadmin3,curl,zlib1g-dev,libxml2-dev,libxslt1-dev,libyaml-dev,python-setuptools,python-dev,build-essential,john,xrdp,netcat,firefox})
+for x in ${pkg_array[@]}; do apt-get install -y $x; done
+apt-get -y upgrade 
 
 #test user
 cat >> /tmp/noshell.c <<"__EOF__"
@@ -24,6 +27,89 @@ gcc -o /usr/noshell /tmp/noshell.c
 rm /tmp/noshell.c
 useradd -m -U -s /usr/noshell test
 echo "test:password" | chpasswd
+
+
+
+# ----- BAD STUFF -----
+
+#Add users
+useradd alice -m -U -s /bin/bash -c "The one and only" -p "password123456"
+useradd bob -m -U -s /bin/bash -c "Employee of the month" -G alice -p "bobbybo"
+useradd charlie -m -U -s /bin/bash -c "Very annoying employee" -p "passwordqwerty"
+useradd dan -m -U -s /bin/bash -c "Super awesome employee" -p "password"
+useradd eve -m -M -N -s /bin/bash -c "Most chill person ever" -p "comrade"
+useradd frank -m -U -s /bin/bash -c "Loves hotdogs" -p "password11"
+useradd grant -m -U -s /bin/bash -c "Ulysses S" -p "passwordPaSsWoRd"
+useradd howard -m -U -s /bin/rbash -c "Dude with the cowboy hat" -G eve -p "eve"
+useradd ian -m -U -s /bin/bash -c "Definitely a spook" -G sudo,alice -p "password"
+useradd milton -m -U -s /bin/bash -c "gardian of the company septor" -G sudo -p "swingline"
+useradd janice -m -U -s /bin/bash -c "From accounting" -G milton -p "goodpassword"
+useradd morpheus -m -U -s /bin/bash -c "Looking for the ONE" -G dan -p "neo"
+useradd smegel -m -U -s /bin/bash -c "the precious" -G sudo,shadow -p "ring"
+useradd peter -m -U -s /bin/bash -c "moonlights as human spider" -p "MJ"
+useradd lisa -m -U -s /bin/rbash -c "new to the organization" -p "passwordqazxsw"
+useradd tommy -m -U -s /bin/rbash -c "the tank" -p "PassworD"
+useradd bert -m -U -s /usr/sbin/nologin -c "secretely plotting to end ernie" -p "ernie"
+useradd ernie -m -U -s /bin/bash -c "Lives to annoy bert" -G bert -p "bert"
+useradd thor -m -U -s /bin/bash -c "Has a real God complex" -G lisa -p "myhammeristhebest"
+useradd charlene -m -U -s /bin/bash -c "every office has one" -p "passwordpasswordpassword"
+
+echo "alice:password123456" | chpasswd
+echo "bob:bobbybo" | chpasswd
+echo "charlie:passwordqwerty" | chpasswd
+echo "dan:password" | chpasswd
+echo "eve:comrade" | chpasswd
+echo "frank:password!1!1!" | chpasswd
+echo "grant:passwordPaSsWoRd" | chpasswd
+echo "howard:eve" | chpasswd
+echo "ian:password" | chpasswd -c SHA256
+echo "janice:goodpassword" | chpasswd
+echo "morpheus:neo" | chpasswd
+echo "smegel:ring" | chpasswd
+echo "peter:MJ" | chpasswd
+echo "lisa:passwordqazxsw" | chpasswd
+echo "tommy:PassworD" | chpasswd
+echo "ernie:bert" | chpasswd
+echo "bert:ernie" | chpasswd
+echo "thor:myhammeristhebest" | chpasswd
+echo "charlene:passwordpasswordpassword" | chpasswd -c SHA256
+echo "milton:swingline" | chpasswd
+passwd -d howard
+passwd -d lisa
+passwd -l grant
+
+echo "eve's password: comrade" > /boot/grub/grub.cPg
+chown howard:howard /boot/grub/grub.cPg
+chmod 0070 /boot/grub/grub.cPg
+
+#Setuid on specific binaries
+chmod u+s /usr/bin/nmap
+chmod u+s /bin/{nc,netcat}
+chmod u+s /usr/bin/python2.7
+
+# Identify bad binary
+md5sum $(find /usr/local/{bin,sbin} /usr/{bin,sbin} /{bin,sbin}) > /root/KnownGoodBinaries.txt
+cat /root/KnownGoodBinaries.txt | awk '{ print $1 }' | sort | uniq > /root/KnownGoodBinaries1.txt
+mv /root/KnownGoodBinaries1.txt /root/KnownGoodBinaries.txt
+
+cat >> /tmp/yes.c << "__EOF__"
+#include <stdio.h>
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        while (1) {
+            printf("Access: y\n");
+        }
+    }
+    while(1) {
+        printf("%s\n", argv[1]);
+    }
+}
+__EOF__
+gcc -o /tmp/yes /tmp/yes.c
+rm /usr/bin/yes
+mv /tmp/yes /usr/bin/yes
+rm /tmp/yes.c
 
 #critical research project
 cat >> /home/bob/research.sh <<"__EOF__"
@@ -73,88 +159,7 @@ If this web server goes down, the business fails.<br>
 __EOF__
 service apache2 start
 
-# ----- BAD STUFF -----
-
-#Add users
-useradd alice -m -U -s /bin/bash -c "The one and only" -G bob -p "password123456"
-useradd bob -m -U -s /bin/bash -c "Employee of the month" -G alice -p "password123"
-useradd charlie -m -U -s /bin/bash -c "Very annoying employee" -p "passwordqwert"
-useradd dan -m -U -s /bin/bash -c "Super awesome employee" -p "passwordqazxsw"
-useradd eve -m -M -N -s /bin/bash -c "Most chill person ever" -p "comrade"
-useradd frank -m -U -s /bin/bash -c "Loves hotdogs" -p "password11"
-useradd grant -m -U -s /bin/bash -c "Ulysses S" -p "passwordPaSsWoRd"
-useradd howard -m -U -s /bin/bash -c "Dude with the cowboy hat" -p "eve"
-useradd ian -m -U -s /bin/bash -c "Definitely a spook" -G sudo,alice -p "password"
-useradd janice -m -U -s /bin/bash -c "From accounting" -G milton -p "passwordthatislong"
-useradd morpheus -m -U -s /bin/bash -c "Looking for the ONE" -G dan -p "neo"
-useradd smegel -m -U -s /bin/bash -c "the precious" -G sudo,shadow -p "ring"
-useradd peter -m -U -s /bin/bash -c "moonlights as human spider" -p "parker"
-useradd lisa -m -U -s /bin/bash -c "new to the organization" -p "passwordqazxsw"
-useradd tommy -m -U -s /bin/bash -c "the tank" -p "PassworD"
-useradd ernie -m -U -s /bin/bash -c "Lives to annoy bert" -G bert -p "bert"
-useradd bert -m -U -s /usr/sbin/nologin -c "secretely plotting to end ernie" -G ernie -p "ernie"
-useradd thor -m -U -s /bin/bash -c "Has a real God complex" -g 0 -o -G lisa -p "myhammeristhebest"
-useradd charlene -m -U -s /bin/bash -c "every office has one" -p "passwordpasswordpassword"
-useradd milton -m -U -s /bin/bash -c "gardian of the company septor" -G sudo -p "stapler"
-echo "alice:password123456" | chpasswd
-echo "bob:password123!!!" | chpasswd
-echo "charlie:passwordqwerty" | chpasswd
-echo "dan:passwordqazxsw" | chpasswd
-echo "eve:comrade" | chpasswd
-echo "frank:password!1!1!" | chpasswd
-echo "grant:passwordPaSsWoRd" | chpasswd
-echo "howard:eve" | chpasswd
-echo "ian:password" | chpasswd -c SHA256
-echo "janice:passwordthatislong" | chpasswd
-echo "morpheus:neo" | chpasswd
-echo "smegel:ring" | chpasswd
-echo "peter:parker" | chpasswd
-echo "lisa:passwordqazxsw" | chpasswd
-echo "tommy:PassworD" | chpasswd
-echo "ernie:bert" | chpasswd
-echo "bert:ernie" | chpasswd
-echo "thor:myhammeristhebest" | chpasswd
-echo "charlene:passwordpasswordpassword" | chpasswd -c SHA256
-echo "milton:stapler" | chpasswd
-passwd -d howard
-passwd -d lisa
-passwd -l grant
-
-echo "eve's password: comrade" > /boot/grub/grub.cPg
-chown howard:howard /boot/grub/grub.cPg
-chmod 0070 /boot/grub/grub.cPg
-
-#Setuid on specific binaries
-chmod u+s /usr/bin/nmap
-chmod u+s /bin/{nc,netcat}
-chmod u+s /usr/bin/python2.7
-
-# Identify bad binary
-md5sum $(find /usr/local/{bin,sbin} /usr/{bin,sbin} /{bin,sbin}) > /root/KnownGoodBinaries.txt
-cat /root/KnownGoodBinaries.txt | awk '{ print $1 }' | sort | uniq > /root/KnownGoodBinaries1.txt
-mv /root/KnownGoodBinaries1.txt /root/KnownGoodBinaries.txt
-
-cat >> /tmp/yes.c << "__EOF__"
-#include <stdio.h>
-
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        while (1) {
-            printf("y\n");
-        }
-    }
-    while(1) {
-        printf("%s\n", argv[1]);
-    }
-}
-__EOF__
-gcc -o /tmp/yes /tmp/yes.c
-rm /usr/bin/yes
-mv /tmp/yes /usr/bin/yes
-rm /tmp/yes.c
-
 #bob backdoor
-useradd bob -m -U -s /bin/bash
 echo 'bob:badpassword' | chpasswd
 cat >> /home/bob/listener.sh <<"__EOF__"
 #!/bin/bash
@@ -262,7 +267,7 @@ update-rc.d inti defaults
 useradd janice -m -U -s /bin/bash
 echo 'janice:goodpassword' | chpasswd
 cat >> /home/janice/data.txt <<"__EOF__"
-Name: Bobby Bo Jangles
+Name: Bobby Bright
 SSN: 123-45-6789
 Phone: 123-456-7890
 Address: 123 Cyber School St. Ft. Gordon, GA 30905
@@ -273,9 +278,9 @@ __EOF__
 
 #games passwords file
 cat >> /usr/games/thunder.txt <<"__EOF__"
-Thunder Game Passwords!
+Thunder Game Server Passwords!
 user: bob - password: bobbybo
-user: janice - password: thegreatestgameever
+user: janice - password: goodpassword
 user: Thor - password:myhammeristhebest
 __EOF__
 
@@ -283,7 +288,7 @@ __EOF__
 echo '#Bob, the SSH server password is "NeverGiveUpNeverSurrender", Sincerely, Alice.'>> /etc/ssh/sshd_config
 
 #phone number in /etc/python/debian_config
-echo '#Bob, we pay for our Python license with the card: 5429-1735-9823-1457 CVV 132 -Alice' >> /etc/python/debian_config
+echo '#Bob, we pay for our Software licenses with card: 5429-1735-9823-1457 CVV 132 -Alice' >> /etc/python/debian_config
 
 #personal informaiton
 cat >> /var/backups/contactme.txt <<"__EOF__"
@@ -295,12 +300,11 @@ We are paying for our backup account with the following credit card:
 __EOF__
 
 #old payment informaiton
-useradd charlie -m -U -s /bin/bash
 cat >> /home/charlie/payment.txt <<"__EOF__"
 Alice: 4753-1728-0910-4639
 Bob: 4086-2671-9514-2306
 Charlie: 5295-6808-3470-4043
-The 4 Star General: 6011-2428-8792-3672
+(Big Gun) The General: 6011-2428-8792-3672
 __EOF__
 
 
@@ -308,7 +312,7 @@ __EOF__
 sed -i 's:#!/bin/sh -e:#!/bin/sh:' /etc/rc.local
 sed -i '$ d' /etc/rc.local
 cat >> /etc/rc.local <<"__EOF__"
-((while :; do sleep 666; wall -n "$(echo 'FORKYOU !' | figlet)"; done) &)
+((while :; do sleep 666; wall -n "$(echo 'fOrKyOu?' | figlet)"; done) &)
 exit 0
 __EOF__
 
@@ -318,7 +322,7 @@ __EOF__
 head -n 5 /etc/bash.bashrc > /tmp/bash.bashrc
 cat >> /tmp/bash.bashrc <<"__EOF__"
 if [[ $EUID -eq 0 ]]; then
-    ((sleep 3; wall -n "$(echo 'root creds YAY!  thank you!' | figlet)") &)
+    ((sleep 3; wall -n "$(echo 'Got root ?' | figlet)"; wall -n "$(echo "SO DO I!  Thanks! " | figlet)") &)
 fi
 __EOF__
 
