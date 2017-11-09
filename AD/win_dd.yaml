@@ -1,6 +1,6 @@
-heat_template_version: 2016-10-14
+heat_template_version: 2017-02-24
 
-description: Heat Template for Disorderly Domain Exer of CCTC - Provides base resources, Windows 10 and 2016 Core Server.
+description: Heat Template for Disorderly Domain Exer of CCTC - Provides Windows 10 and 2016 Core Server.
 
 parameters:
 
@@ -118,7 +118,7 @@ resources:
       image: Windows Server 2016
       name:
         str_replace:
-          template: lastname-Domain-Controller
+          template: Disorderly_Domain
           params:
             lastname: { get_param: last_name }
       networks:
@@ -132,10 +132,11 @@ resources:
             New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "AutoAdminLogon" -PropertyType DWord -Value 1
             New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultUserName" -PropertyType String -Value "Administrator"
             New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultPassword" -PropertyType String -Value 'PassWord12345!!'
-            Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/setup1.ps1" -OutFile "C:\windows\system32\setup1.ps1"
-            Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/setup2.ps1" -OutFile "C:\windows\system32\setup2.ps1"
-            Invoke-WebRequest -Uri "10.50.22.211/windows/.hidden/Disorderly_Domain/start.ps1" -OutFile "C:\windows\system32\start.ps1"
+            Invoke-WebRequest -Uri "10.50.25.121/windows/.hidden/Disorderly_Domain/setup1.ps1" -OutFile "C:\windows\system32\setup1.ps1"
+            Invoke-WebRequest -Uri "10.50.25.121/windows/.hidden/Disorderly_Domain/setup2.ps1" -OutFile "C:\windows\system32\setup2.ps1"
+            Invoke-WebRequest -Uri "10.50.25.121/windows/.hidden/Disorderly_Domain/start.ps1" -OutFile "C:\windows\system32\start.ps1"
             Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" "setup1" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\windows\system32\setup1.ps1"'
+            Update-Help -Force
             exit 1001
           params:
             $user: { get_param: last_name }
@@ -181,15 +182,37 @@ resources:
             & c:\npp.exe /S
             (new-object System.Net.WebClient).DownloadFile('https://the.earth.li/~sgtatham/putty/latest/x86/putty-0.67-installer.msi','C:\putty.msi')
             & msiexec /i c:\putty.msi /quiet /passive
-            (new-object System.Net.WebClient).DownloadFile('10.50.22.211/windows/.hidden/Disorderly_Domain/rsat.ico','C:\windows\system32\rsat.ico')
-            # generates RSAT desktop shortcut
-            $WshShell = New-Object -ComObject WScript.Shell
-            $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\RSAT Install.lnk")
-            $Shortcut.TargetPath = "goo.gl/J4OguI"
-            $Shortcut.IconLocation = "C:\windows\system32\rsat.ico"
-            $Shortcut.Save()
+            (new-object System.Net.WebClient).DownloadFile('http://download.documentfoundation.org/libreoffice/stable/5.4.2/win/x86_64/LibreOffice_5.4.2_Win_x64.msi','C:\LibreOffice.msi')
+            & msiexec /i c:\LibreOffice.msi /quiet /passive
+            (new-object System.Net.WebClient).DownloadFile('http://10.50.25.121/windows/.hidden/Disorderly_Domain/rsat.ico','C:\windows\system32\rsat.ico')
+            (new-object System.Net.WebClient).DownloadFile('http://10.50.25.121/windows/.hidden/Disorderly_Domain/S-6_SOP.pdf','C:\windows\system32\S-6_Accounts_Security_SOP.pdf')
+            (new-object System.Net.WebClient).DownloadFile('http://10.50.25.121/windows/.hidden/Disorderly_Domain/PsExec.exe','C:\windows\system32\psexec.exe')
+            #
+            #----generates RSAT desktop shortcut files needed for RSAT_ShortCut.ps1
+            Write-Output '$WshShell = New-Object -ComObject WScript.Shell' > C:\Windows\System32\RSAT_ShortCut.ps1
+            Write-Output '$Shortcut = $WshShell.CreateShortcut("$Home\Desktop\RSAT Install.lnk")' >> C:\Windows\System32\RSAT_ShortCut.ps1
+            Write-Output '$Shortcut.TargetPath = "http://goo.gl/J4OguI"' >> C:\Windows\System32\RSAT_ShortCut.ps1
+            Write-Output '$Shortcut.IconLocation = "C:\windows\system32\rsat.ico"' >> C:\Windows\System32\RSAT_ShortCut.ps1
+            Write-Output '$Shortcut.Save()' >> C:\Windows\System32\RSAT_ShortCut.ps1
+            Write-Output 'Copy-Item -Path C:\Windows\System32\S-6_Accounts_Security_SOP.pdf -Destination C:\Users\Administrator\Desktop' >> C:\Windows\System32\RSAT_ShortCut.ps1
+            Write-Output 'Update-Help -Force' >> C:\Windows\System32\RSAT_ShortCut.ps1
+            Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force
+            #
+            #----alters GPO so Administrator can access web
+            secedit /export /cfg c:\secpol.cfg
+            (gc C:\secpol.cfg).replace("MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ScForceOption=4,0", "MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\FilterAdministratorToken=4,1") | Out-File -File C:\secpol.cfg
+            secedit /configure /db c:\windows\security\local.sdb /cfg c:\secpol.cfg
+            rm -force c:\secpol.cfg -confirm:$false
+            #
+            #----alters UIPI key so Administrator can acces web
+            Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -name "UIPI" -value "0x00000001(1)"
+            #
+            #----generates RSAT desktop shortcut on Administrator's desktop by running RSAT_ShortCut.ps1 on reboot
+            Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" -name "shortcut" 'c:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "c:\Windows\System32\RSAT_ShortCut.ps1"'
             net user /add $user $password /y
             net localgroup administrators /add $user
+            net user administrator password
+            net user administrator /active:yes
             exit 1001
           params:
             $user: { get_param: last_name }
