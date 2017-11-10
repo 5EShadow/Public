@@ -140,11 +140,11 @@ _________________________________________________________________
 +++----+++ +
 #!/bin/bash +
 for user in $(getent passwd | cut -d: -f1);  +
-[green]*[TAB]*   do +
-[TAB][TAB]  if [[ $(crontab -u $user -l 2>/dev/null) ]]; +
-[TAB][TAB][TAB]   then +
-[TAB][TAB][TAB][TAB]  echo $user; crontab -u $user -l 2>/dev/null; +
-[TAB][TAB]  fi; +
+[green]*[TAB]*    do +
+[green]*[TAB][TAB]*   if [[ $(crontab -u $user -l 2>/dev/null) ]]; +
+[green]*[TAB][TAB][TAB]*    then +
+[green]*[TAB][TAB][TAB][TAB]*   echo $user; crontab -u $user -l 2>/dev/null; +
+[green]*[TAB][TAB]*   fi; +
 done +
 +++----+++
 
