@@ -1,4 +1,4 @@
-*Notes: 20171110:*
+*Dan Notes: 20171110:*
 
 ----
 for x in $(cat file);
@@ -10,9 +10,9 @@ cp /root/files.zip /var/back
 ----
 
 * *exploring possibility of using smartboards with debian/ubuntu boxes:* +
-** what drivers do we need? +
+** what drivers do we need?
 *** driver_ver_2.0_nix
-** will it cost anything for additional software? +
+** will it cost anything for additional software?
 *** not as of now
-** can we use a windows VM if above doesn't work? +
+** can we use a windows VM if above doesn't work?
 *** still researching posibility ..
