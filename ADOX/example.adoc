@@ -9,7 +9,7 @@ echo "string text" > to_config_file
 cp /root/files.zip /var/back
 ----
 
-*exploring possibility of using smartboards with debian/ubuntu boxes:*
-. what drivers do we need?
-. will it cost anything for additional software?
-. can we use a windows VM if above doesn't work?
+*exploring possibility of using smartboards with debian/ubuntu boxes:* +
+. what drivers do we need? +
+. will it cost anything for additional software? +
+. can we use a windows VM if above doesn't work? +
