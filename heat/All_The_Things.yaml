@@ -145,7 +145,7 @@ resources:
             git clone https://github.com/D4NP0UL1N/Public.git /root/GIT
             #
             #---Linux Binaries
-            mkdir -P /var/www/html/linux/.hidden/
+            mkdir -P /var/www/html/linux/.hidden/ 
             find /root/GIT/linux -type f -exec cp {} /var/www/html/linux/ \;            
             wget https://www.dropbox.com/s/5ygjn9vs99gnfy8/fun.vdi?dl=0 -O /var/www/html/linux/fun.vdi            
             mkdir /rootkits
@@ -175,7 +175,7 @@ resources:
             find /root/GIT/PoSH -type f -exec cp {} /var/www/html/PoSH/ \;
             #
             #---Heat YAML files
-            find /root/GIT/heat -type f ! -name "All_The_Things.yaml" -a ! -name "KB.ps1" -exec cp {} /var/www/html/heat/ \;            
+            find /root/GIT/heat -type f ! -name "All_The_Things.yaml" -exec cp {} /var/www/html/heat/ \;            
             bash
             #User accounts
             sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
