@@ -132,9 +132,9 @@ resources:
             New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "AutoAdminLogon" -PropertyType DWord -Value 1
             New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultUserName" -PropertyType String -Value "Administrator"
             New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultPassword" -PropertyType String -Value 'PassWord12345!!'
-            Invoke-WebRequest -Uri "10.50.25.121/windows/.hidden/Disorderly_Domain/setup1.ps1" -OutFile "C:\windows\system32\setup1.ps1"
-            Invoke-WebRequest -Uri "10.50.25.121/windows/.hidden/Disorderly_Domain/setup2.ps1" -OutFile "C:\windows\system32\setup2.ps1"
-            Invoke-WebRequest -Uri "10.50.25.121/windows/.hidden/Disorderly_Domain/start.ps1" -OutFile "C:\windows\system32\start.ps1"
+            Invoke-WebRequest -Uri "10.50.25.121/windows/.hidden/DD/setup1.ps1" -OutFile "C:\windows\system32\setup1.ps1"
+            Invoke-WebRequest -Uri "10.50.25.121/windows/.hidden/DD/setup2.ps1" -OutFile "C:\windows\system32\setup2.ps1"
+            Invoke-WebRequest -Uri "10.50.25.121/windows/.hidden/DD/start.ps1" -OutFile "C:\windows\system32\start.ps1"
             Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" "setup1" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\windows\system32\setup1.ps1"'
             Update-Help -Force
             exit 1001
