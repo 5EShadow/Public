@@ -1,6 +1,6 @@
 heat_template_version: 2016-10-14
 
-description: Linux Web_Server
+description: Linux Web_Server Spawn Script
  
 parameters:
 
@@ -25,7 +25,7 @@ parameters:
     label: Root Password
     description: root and admin password
     hidden: true
-    default: Passw0rd
+    default: password
     constraints:
       -  length: { min: 8, max: 20 }
          description: Password must be between 8 and 20 characters
@@ -34,14 +34,14 @@ parameters:
 
 resources:
 
-  network0:
+  server_network:
     type: OS::Neutron::Net
     properties:
-      name: network0
+      name: server_network
       admin_state_up: true
          
       
-  subnet0:
+  server_subnet:
     type: OS::Neutron::Subnet
     properties:
       allocation_pools:
@@ -87,21 +87,32 @@ resources:
     type:  OS::Neutron::RouterInterface
     properties:
       router_id: { get_resource: server-router }       
-      subnet_id: { get_resource: subnet0 }
+      subnet_id: { get_resource: server_subnet }
       
-  host1-port:
+  float_ip_1:
+    type: OS::Neutron::FloatingIP
+    depends_on: server-router
+    properties: { floating_network: public }
+
+  float_port_1:
     type: OS::Neutron::Port
     properties:
-      network_id: { get_resource: network0 }
+      network_id: { get_resource: server-network }
       fixed_ips:
-        - subnet_id: { get_resource: subnet0 }
+        - subnet_id: { get_resource: server-subnet }
           ip_address:
             str_replace:
-              template: 10.serverID.0.1
+              template: 10.studentID.0.99
               params:
-                serverID: { get_param: server_id }
+                studentID: { get_param: server_id }
       port_security_enabled: false
-                     
+      
+  float_ip_assoc_1:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_resource: float_ip_1 }
+      port_id: { get_resource: float_port_1 }
+                          
   host1:
     type: OS::Nova::Server
     properties:
@@ -123,34 +134,54 @@ resources:
             useradd -m -G sudo zeus
             export DEBIAN_FRONTEND=noninteractive
             apt-get update
-            apt-get -y install locate dnsutils lsof aptitude ftp auditd telnet samba git zip unzip figlet hexedit tree apache2 gcc tcc netcat
-            apt-get -y install qemu
+            pkg_array=({install,locate,dnsutils,lsof,aptitude,auditd,git,zip,unzip,figlet,hexedit,tree,apache2,gcc,tcc,build-essential,libreadline-dev,libssl-dev,libpq5,libpq-dev,libreadline5,libsqlite3-dev,libpcap-dev,git-core,autoconf,pgadmin3,curl,zlib1g-dev,libxml2-dev,libxslt1-dev,libyaml-dev,nmap,python-setuptools,python-dev,build-essential,netcat,firefox})
+            for x in ${pkg_array[@]}; do apt-get install -y $x; done
             apt-get upgrade
             updatedb
             mandb
-            mkdir /var/www/html/linux
-            wget goo.gl/eGEfnd -O /var/www/html/linux/banner.sh
-            wget goo.gl/pZN4ED -O /var/www/html/linux/check.pyc
-            wget goo.gl/KwvVVC -O /var/www/html/linux/runme
-            wget goo.gl/yhFrdp -O /var/www/html/linux/page.html
-            wget goo.gl/5wG3gr -O /var/www/html/linux/fun.vdi
-            wget goo.gl/Uggv6h -O /var/www/html/linux/mbroken.zip
-            wget goo.gl/g9JJ9z -O /var/www/html/linux/mbrgood.zip
-            wget goo.gl/FEAeHi -O /var/www/html/linux/NMAP_all_hosts.txt
-            wget goo.gl/DFSyzZ -O /var/www/html/linux/MYSTERIOUS_FILE
-            wget goo.gl/kyDrPg -O /var/www/html/linux/sorted.zip
-            wget goo.gl/ijStVf -O /var/www/html/linux/PassCrack.zip
-            wget goo.gl/BXvDqT -O /var/www/html/linux/warriors.zip
+            service apache2 start
+            mkdir /root/GIT
+            mkdir -P /var/www/html/{linux,heat,windows,networking,BASH,WOBC}            
+            git clone https://github.com/D4NP0UL1N/Public.git /root/GIT
+            #
+            #---Linux Binaries and yamls
+            mkdir -P /var/www/html/linux/.hidden/
+            find /root/GIT/linux -type f -exec cp {} /var/www/html/linux/ \;            
+            wget https://www.dropbox.com/s/5ygjn9vs99gnfy8/fun.vdi?dl=0 -O /var/www/html/linux/fun.vdi            
             mkdir /rootkits
             git clone https://github.com/D4NP0UL1N/0010100010.git /rootkits
             echo 0 > /proc/sys/kernel/randomize_va_space
             gcc -o /var/www/html/linux/sudo_bad /rootkits/sudo.c 2>/dev/null
+            rm /rootkits/README.md
             zip /var/www/html/linux/rootkits.zip /rootkits/*
             chmod +x /var/www/html/linux/*
-            service apache2 start
+            #
+            #---BASH Binaries
+            mkdir -P /var/www/html/BASH/FINAL            
+            find /root/GIT/BASH/ -maxdepth 1 -type f -exec cp {} /var/www/html/BASH/ \;
+            find /root/GIT/BASH/FINAL -maxdepth 1 -type f -exec cp {} /var/www/html/BASH/FINAL/ \;                       
+            #
+            #---Windows Binaries
+            mkdir -P /var/www/html/windows/.hidden/{DD,TTW}
+            find /root/GIT/windows -type f -exec cp {} /var/www/html/windows/ \;
+            find /root/GIT/AD -type f -exec cp {} /var/www/html/windows/.hidden/DD/ \;
+            find /root/GIT/TTW -type f -exec cp {} /var/www/html/windows/.hidden/TTW/ \;
+            find /root/GIT/heat/KB.ps1 -type f -exec cp {} /var/www/html/windows/.hidden/ \;
+            #
+            #---Networking Binaries
+            find /root/GIT/networking -type f -exec cp {} /var/www/html/networking/ \;
+            #
+            #---PowerShell Binaries
+            find /root/GIT/PoSH -type f -exec cp {} /var/www/html/PoSH/ \;
+            #
+            #---Heat yaml files
+            find /root/GIT/heat -type f ! -name "All_The_Things.yaml" -a ! -name "KB.ps1" -exec cp {} /var/www/html/heat/ \;            
             bash
             #User accounts
-            sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+            sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+            sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+            sed -i 's/#Port 22/Port 22/' /etc/ssh/sshd_config
+            service ssh restart
             useradd $user -m -U -s /bin/bash
             usermod -aG sudo $user
             echo "$user:$password" | chpasswd
