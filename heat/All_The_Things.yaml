@@ -1,31 +1,31 @@
-heat_template_version: 2017-02-24
+heat_template_version: 2016-10-14
 
-description: Heat Template for Linux module of CCTC - Debian 16.04 and Ubuntu 16.04
-
+description: Linux Web_Server Spawn Script
+ 
 parameters:
 
-  student_id:
+  server_id:
     type: string
-    label: Student ID
-    description: Student ID Number with No Leading Zeros
+    label: Server ID
+    description: Server ID Number with No Leading Zeros
 
-  last_name:
+  server_name:
     type: string
-    label: Last Name
-    description: Last Name
+    label: Server Name
+    description: Server Name
     default:
     constraints:
       -  length: { min: 1, max: 15 }
-         description: Last name must be no longer than 15 characters
+         description: Server name must be no longer than 15 characters
       -  allowed_pattern: "[a-zA-Z]*"
-         description: Last name may only contain letters
-
-  password:
+         description: Server name may only contain letters
+  
+  AdminPassword:
     type: string
-    label: Password
-    description: Set root/admin password for instances
+    label: Root Password
+    description: root and admin password
     hidden: true
-    default:
+    default: password
     constraints:
       -  length: { min: 8, max: 20 }
          description: Password must be between 8 and 20 characters
@@ -34,84 +34,77 @@ parameters:
 
 resources:
 
-  stu-network:
+  server_network:
     type: OS::Neutron::Net
     properties:
-      name:
-        str_replace:
-          template: lastName_Network
-          params:
-            lastName: { get_param: last_name }
+      name: server_network
       admin_state_up: true
-      shared: false
-
-  stu-subnet:
+         
+      
+  server_subnet:
     type: OS::Neutron::Subnet
     properties:
       allocation_pools:
         - start:
             str_replace:
-              template: 10.studentID.0.200
+              template: 10.serverID.0.200
               params:
-                studentID: { get_param: student_id }
+                serverID: { get_param: server_id }
           end:
             str_replace:
-              template: 10.studentID.0.250
+              template: 10.serverID.0.250
               params:
-                studentID: { get_param: student_id }
+                serverID: { get_param: server_id }
       cidr:
         str_replace:
-          template: 10.studentID.0.0/24
+          template: 10.serverID.0.0/24
           params:
-            studentID: { get_param: student_id }
+            serverID: { get_param: server_id }
       gateway_ip:
         str_replace:
-          template: 10.studentID.0.254
+          template: 10.serverID.0.254
           params:
-            studentID: { get_param: student_id }
-      network_id: { get_resource: stu-network }
+            serverID: { get_param: server_id }
+      network: { get_resource: network0 }
       dns_nameservers: [10.50.255.254]
-      enable_dhcp: true
-      host_routes: []
-      ip_version: 4
       name:
         str_replace:
-          template: lastname_subnet
+          template: servername_subnet
           params:
-            lastname: { get_param: last_name }
-
-  stu-router:
+            servername: { get_param: server_name }
+        
+  server-router:
     type: OS::Neutron::Router    
     properties:
       name:
         str_replace:
-          template: lastname_router
+          template: servername_router
           params:
-            lastname: { get_param: last_name }
+            servername: { get_param: server_name }
       external_gateway_info: {"network": public}
-
-  stu-router-interface:
+        
+  server-router-interface:
     type:  OS::Neutron::RouterInterface
     properties:
-      router_id: { get_resource: stu-router }       
-      subnet_id: { get_resource: stu-subnet }
+      router_id: { get_resource: server-router }       
+      subnet_id: { get_resource: server_subnet }
       
   float_ip_1:
     type: OS::Neutron::FloatingIP
-    depends_on: stu-router
+    depends_on: server-router
     properties: { floating_network: public }
 
   float_port_1:
     type: OS::Neutron::Port
     properties:
-      network_id: { get_resource: stu-network }
+      network_id: { get_resource: server-network }
       fixed_ips:
-        - subnet_id: { get_resource: stu-subnet }
+        - subnet_id: { get_resource: server-subnet }
           ip_address:
             str_replace:
-              template: 10.studentID.0.1
+              template: 10.studentID.0.99
               params:
-                studentID: { get_param: student_id }
+                studentID: { get_param: server_id }
       port_security_enabled: false
       
   float_ip_assoc_1:
@@ -119,60 +112,83 @@ resources:
     properties:
       floatingip_id: { get_resource: float_ip_1 }
       port_id: { get_resource: float_port_1 }
-
+                          
   host1:
     type: OS::Nova::Server
     properties:
       name:
         str_replace:
-          template: All The Things
+          template: All_The_Things
           params:
-            lastname: { get_param: last_name }
+            lastname: { get_param: server_name }
       image: Debian LXDE
       flavor: cy.medium
-      diskConfig: AUTO
       networks: 
-        - port: { get_resource: float_port_1 }
+        - port: { get_resource: host1-port }
       user_data: 
         str_replace:
           template: |
-           #!/bin/bash            
+            #!/bin/bash
             echo 127.0.0.1 $(hostname) >> /etc/hosts
+            echo 173.230.138.130 git.cybbh.space >> /etc/host
+            useradd -m -G sudo zeus
             export DEBIAN_FRONTEND=noninteractive
-            apt-get -y update
-            pkg_array=({locate,dnsutils,lsof,aptitude,ftp,auditd,telnet,samba,git,zip,unzip,figlet,hexedit,tree,apache2,gcc,tcc,build-essential,libreadline-dev,libssl-dev,libpq5,libpq-dev,libreadline5,libsqlite3-dev,libpcap-dev,git-core,autoconf,postgresql,pgadmin3,curl,zlib1g-dev,libxml2-dev,libxslt1-dev,libyaml-dev,nmap,python-setuptools,python-dev,build-essential,hydra,hydra-gtk,john,xrdp,tigervnc-standalone-server,netcat,firefox,figlet})
+            apt-get update
+            pkg_array=({install,locate,dnsutils,lsof,aptitude,auditd,git,zip,unzip,figlet,hexedit,tree,apache2,gcc,tcc,build-essential,libreadline-dev,libssl-dev,libpq5,libpq-dev,libreadline5,libsqlite3-dev,libpcap-dev,git-core,autoconf,pgadmin3,curl,zlib1g-dev,libxml2-dev,libxslt1-dev,libyaml-dev,nmap,python-setuptools,python-dev,build-essential,netcat,firefox})
             for x in ${pkg_array[@]}; do apt-get install -y $x; done
-            apt-get -y upgrade
+            apt-get upgrade
             updatedb
             mandb
+            service apache2 start
+            mkdir /root/GIT
+            mkdir -P /var/www/html/{linux,heat,windows,networking,BASH,WOBC}            
+            git clone https://github.com/D4NP0UL1N/Public.git /root/GIT
+            #
+            #---Linux Binaries and yamls
+            mkdir -P /var/www/html/linux/.hidden/
+            find /root/GIT/linux -type f -exec cp {} /var/www/html/linux/ \;            
+            wget https://www.dropbox.com/s/5ygjn9vs99gnfy8/fun.vdi?dl=0 -O /var/www/html/linux/fun.vdi            
+            mkdir /rootkits
+            git clone https://github.com/D4NP0UL1N/0010100010.git /rootkits
+            echo 0 > /proc/sys/kernel/randomize_va_space
+            gcc -o /var/www/html/linux/sudo_bad /rootkits/sudo.c 2>/dev/null
+            rm /rootkits/README.md
+            zip /var/www/html/linux/rootkits.zip /rootkits/*
+            chmod +x /var/www/html/linux/*
+            #
+            #---BASH Binaries
+            mkdir -P /var/www/html/BASH/FINAL            
+            find /root/GIT/BASH/ -maxdepth 1 -type f -exec cp {} /var/www/html/BASH/ \;
+            find /root/GIT/BASH/FINAL -maxdepth 1 -type f -exec cp {} /var/www/html/BASH/FINAL/ \;                       
+            #
+            #---Windows Binaries
+            mkdir -P /var/www/html/windows/.hidden/{DD,TTW}
+            find /root/GIT/windows -type f -exec cp {} /var/www/html/windows/ \;
+            find /root/GIT/AD -type f -exec cp {} /var/www/html/windows/.hidden/DD/ \;
+            find /root/GIT/TTW -type f -exec cp {} /var/www/html/windows/.hidden/TTW/ \;
+            find /root/GIT/heat/KB.ps1 -type f -exec cp {} /var/www/html/windows/.hidden/ \;
+            #
+            #---Networking Binaries
+            find /root/GIT/networking -type f -exec cp {} /var/www/html/networking/ \;
+            #
+            #---PowerShell Binaries
+            find /root/GIT/PoSH -type f -exec cp {} /var/www/html/PoSH/ \;
+            #
+            #---Heat yaml files
+            find /root/GIT/heat -type f ! -name "All_The_Things.yaml" -a ! -name "KB.ps1" -exec cp {} /var/www/html/heat/ \;            
+            bash
+            #User accounts
             sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
             sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
             sed -i 's/#Port 22/Port 22/' /etc/ssh/sshd_config
             service ssh restart
-            useradd $user -m -U -G sudo -s /bin/bash
-            useradd -m zeus -U -G sudo -s /bin/bash
-            echo "root:PassWord1234" | chpasswd
-            echo "$user:PassWord1234" | chpasswd
-            echo "zeus:PassWord1234" | chpasswd
-            service apache2 start
-            mkdir /var/www/html/{heat,windows,networking,linux,BASH}
-            mkdir -P /var/www/html/windows/.hidden/{Disorderly_Domain,TTW}
-            mkdir -P /var/www/html/linux/.hidden/Tight-Wire
-            git clone https://github.com/D4NP0UL1N/Public/AD.git /var/www/html/windows/.hidden/Disorderly_Domain/AD
-            cp /var/www/html/windows/.hidden/Disorderly_Domain/AD/* /var/www/html/windows/.hidden/Disorderly_Domain/
-            find /var/www/html/windows/.hidden/Disorderly_Domain/* -type f -name "*.yaml" -exec mv {} /var/www/html/heat/ \;
-            git clone https://github.com/D4NP0UL1N/Public/TTW.git /var/www/html/windows/.hidden/TTW/TTW-Temp
-            cp /var/www/html/windows/.hidden/TTW/TTW-Temp/* /var/www/html/windows/.hidden/TTW/
-            find /var/www/html/windows/.hidden/TTW/* -type f -name "*.yaml" -exec mv {} /var/www/html/heat/ \;
-            git clone https://github.com/D4NP0UL1N/Public/BASH.git /var/www/html/BASH/.hidden/BASH/BASH-Temp
-            cp /var/www/html/BASH/.hidden/BASH/BASH-Temp/* /var/www/html/BASH/.hidden/BASH/
-            find /var/www/html/BASH/.hidden/BASH/* -type f -name "*.yaml" -exec mv {} /var/www/html/heat/ \;
-            git clone https://github.com/D4NP0UL1N/Public/bins.git /var/www/html/linux/linux-Temp
-            cp /var/www/html/linux/linux-Temp/* /var/www/html/linux/
-            find /var/www/html/linux/* -type f -name "*.yaml" -exec mv {} /var/www/html/heat/ \;
+            useradd $user -m -U -s /bin/bash
+            usermod -aG sudo $user
+            echo "$user:$password" | chpasswd
+            echo "zeus:$password" | chpasswd
+            echo "root:$password" | chpasswd
             reboot
           params:
-            $user: { get_param: last_name }
-            $password: { get_param: password }
-            $studentID: { get_param: student_id }
+            $user: { get_param: server_name }
+            $password: { get_param: AdminPassword }
       user_data_format: RAW
