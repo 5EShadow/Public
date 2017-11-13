@@ -118,13 +118,13 @@ resources:
     properties:
       name:
         str_replace:
-          template: All_The_Things
+          template: All_Teh_Things
           params:
             lastname: { get_param: server_name }
       image: Debian LXDE
       flavor: cy.medium
       networks: 
-        - port: { get_resource: host1-port }
+        - port: { get_resource: float_port_1 }
       user_data: 
         str_replace:
           template: |
