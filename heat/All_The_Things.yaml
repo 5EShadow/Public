@@ -65,7 +65,7 @@ resources:
           template: 10.serverID.0.254
           params:
             serverID: { get_param: server_id }
-      network: { get_resource: network0 }
+      network: { get_resource: server_network }
       dns_nameservers: [10.50.255.254]
       name:
         str_replace:
