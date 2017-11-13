@@ -41,7 +41,7 @@ resources:
       admin_state_up: true
          
       
-  server_subnet:
+  server-subnet:
     type: OS::Neutron::Subnet
     properties:
       allocation_pools:
@@ -65,7 +65,7 @@ resources:
           template: 10.serverID.0.254
           params:
             serverID: { get_param: server_id }
-      network: { get_resource: server_network }
+      network: { get_resource: server-network }
       dns_nameservers: [10.50.255.254]
       name:
         str_replace:
@@ -86,20 +86,20 @@ resources:
   server-router-interface:
     type:  OS::Neutron::RouterInterface
     properties:
-      router_id: { get_resource: server_router }       
-      subnet_id: { get_resource: server_subnet }
+      router_id: { get_resource: server-router }       
+      subnet_id: { get_resource: server-subnet }
       
   float_ip_1:
     type: OS::Neutron::FloatingIP
-    depends_on: server_router
+    depends_on: server-router
     properties: { floating_network: public }
 
   float_port_1:
     type: OS::Neutron::Port
     properties:
-      network_id: { get_resource: server_network }
+      network_id: { get_resource: server-network }
       fixed_ips:
-        - subnet_id: { get_resource: server_subnet }
+        - subnet_id: { get_resource: server-subnet }
           ip_address:
             str_replace:
               template: 10.studentID.0.99
