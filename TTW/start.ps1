@@ -10,7 +10,14 @@ Move-Item  C:\windows\system32\setup2.ps1 -Destination C:\Users\administrator\ap
 
 Remove-Item C:\Users\administrator\appdata\local\temp\setup2.ps1 -force
 Remove-Item C:\windows\system32\setup2.ps1 -force
+
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name AutoAdminLogon -Value 0
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name DefaultUserName -Value "NONE"
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name DefaultPassword -Value "NONE"
+
 start-sleep -s 3
 
 Write-Output "The password for the next level is the Powershell build version. Please be sure to include all periods" -n > C:\Users\Apprentice01\Desktop\challenge.txt
 icacls "C:\Users\Apprentice01\Desktop\challenge.txt" /grant Apprentice01:F /T /C
+
+Restart-Computer
