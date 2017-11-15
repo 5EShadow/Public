@@ -124,53 +124,57 @@ New-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explo
 New-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System" -Name DisableRegistryTools -Value 1 -PropertyType DWord | Out-Null
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System" -Name DontDisplayLastUserName -Value 1
 
-#----- CLreates 50 Domain User Accounts .. 3 hidden ---  all must have default password to be used in follow on psexec for loops
+#----- Sets Password -----
+$pass = CovertTo-SecureString -String 'password' -AsPlainText -Force
+$expire = $((Get-Date).AddDays(180)) 
+
+#----- Creates 50 Domain User Accounts .. 3 hidden ---  all must have default password to be used in follow on psexec for loops
 
 $users1 = @("Apprentice01","Apprentice02","Apprentice03","Apprentice04","Apprentice05","Apprentice06","Apprentice07","Apprentice08","Apprentice09","Apprentice10")
 foreach ($user in $users1) {
-New-ADUser -Name $user -Path "OU=Apprentice,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
+New-ADUser -Name $user -Path "OU=Apprentice,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword $pass -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
 Add-ADGroupMember -Identity "CN=Apprentices,CN=Users,DC=army,DC=warriors" -Members $user
 }
 start-sleep -s 1
 
 $users2 = @("Fighter01","Fighter02","Fighter03","Fighter04","Fighter05","Fighter06","Fighter07","Fighter08","Fighter09","Fighter10")
 foreach ($user in $users2) {
-New-ADUser -Name $user -Path "OU=Fighter,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false
+New-ADUser -Name $user -Path "OU=Fighter,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword $pass -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false
 Add-ADGroupMember -Identity "CN=Fighters,CN=Users,DC=army,DC=warriors" -Members $user
 }
 start-sleep -s 1
 
 $users3 = @("Paladin01","Paladin02","Paladin03","Paladin04","Paladin05","Paladin06","Paladin07","Paladin08","Paladin09","Paladin10")
 foreach ($user in $users3) {
-New-ADUser -Name $user -Path "OU=Paladin,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
+New-ADUser -Name $user -Path "OU=Paladin,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword $pass -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
 Add-ADGroupMember -Identity "CN=Paladins,CN=Users,DC=army,DC=warriors" -Members $user
 }
 start-sleep -s 1
 
 $users4 = @("Wizard01","Wizard02","Wizard03","Wizard04","Wizard05","Wizard06","Wizard07","Wizard08","Wizard09","Wizard10")
 foreach ($user in $users4) {
-New-ADUser -Name $user -Path "OU=Wizard,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
+New-ADUser -Name $user -Path "OU=Wizard,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword $pass -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
 Add-ADGroupMember -Identity "CN=Wizards,CN=Users,DC=army,DC=warriors" -Members $user
 }
 start-sleep -s 1
 
 $users5 = @("OSsassin01","OSsassin02","OSsassin03","OSsassin04","OSsassin05","OSsassin06","OSsassin07","OSsassin08","OSsassin09")
 foreach ($user in $users5) {
-New-ADUser -Name $user -Path "OU=OSsassin,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false
+New-ADUser -Name $user -Path "OU=OSsassin,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword $pass -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false
 Add-ADGroupMember -Identity "CN=OSsassins,CN=Users,DC=army,DC=warriors" -Members $user
 }
 start-sleep -s 1
 
-New-ADUser -Name "CN=SYNmurai,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
+New-ADUser -Name "CN=SYNmurai,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword $pass -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
 Add-ADGroupMember -Identity "CN=SYNmurais,CN=Users,DC=army,DC=warriors" -Members "CN=SYNmurai,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors"
 
-New-ADUser -Name "CN=Ranger,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
+New-ADUser -Name "CN=Ranger,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword $pass -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
 Add-ADGroupMember -Identity "CN=SYNmurais,CN=Users,DC=army,DC=warriors" -Members "CN=Ranger,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors"
 
-New-ADUser -Name "CN=CodeSlinger,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
+New-ADUser -Name "CN=CodeSlinger,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword $pass -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
 Add-ADGroupMember -Identity "CN=SYNmurais,CN=Users,DC=army,DC=warriors" -Members "CN=CodeSlinger,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors"
 
-New-ADUser -Name "CN=MASTER,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false
+New-ADUser -Name "CN=MASTER,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword $pass -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false
 Add-ADGroupMember -Identity "CN=SYNmurais,CN=Users,DC=army,DC=warriors" -Members "CN=MASTER,OU=SYNmurai,OU=WARRIORS,DC=army,DC=warriors"
 
 
