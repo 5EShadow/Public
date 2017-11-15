@@ -16,5 +16,9 @@ Install-ADDSForest `
 -SysvolPath 'C:\Windows\SYSVOL' `
 -Force:$true
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -name "setup2" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\windows\system32\setup2.ps1"'
-
+New-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name AutoAdminLogon -Value 1 -PropertyType DWord | Out-Null
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name DefaultUserName -Value "administrator"
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name DefaultDomainName -Value "ARMY"
+New-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name DefaultPassword -Value "PassWord12345!!" -PropertyType String | Out-Null
+Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\USBSTOR" -Name Start -Value 1 
 Restart-Computer -Force
