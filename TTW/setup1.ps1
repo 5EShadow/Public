@@ -20,5 +20,4 @@ New-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name DefaultUserName -Value "administrator"
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name DefaultDomainName -Value "ARMY"
 New-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name DefaultPassword -Value "PassWord12345!!" -PropertyType String | Out-Null
-Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\USBSTOR" -Name Start -Value 1 
 Restart-Computer -Force
