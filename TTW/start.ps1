@@ -14,5 +14,3 @@ start-sleep -s 3
 
 Write-Output "The password for the next level is the Powershell build version. Please be sure to include all periods" -n > C:\Users\Apprentice01\Desktop\challenge.txt
 icacls "C:\Users\Apprentice01\Desktop\challenge.txt" /grant Apprentice01:F /T /C
-
-restart-computer
