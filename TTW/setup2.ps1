@@ -210,11 +210,10 @@ foreach ($user in $users6) {
 #----- Specific Files for each account/level/challenge .. modifies domain user accounts with correct challenge "passwords"
 
 
-Set-ADUser -Identity "CN=Apprentice01,OU=Apprentice,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password"
+Set-ADAccountPassword -Identity Apprentice01 -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "password" -Force)
 	Write-Output "The password for the next level is the Powershell build version. Note - Please be sure to include all periods" -n > C:\Users\Apprentice01\Desktop\challenge.txt
 
-$AP02=(ConvertTo-SecureString -AsPlainText "$(($PSVersionTable.BuildVersion).ToString())" -Force)
-Set-ADAccountPassword -Identity Apprentice02 -Reset -NewPassword $AP02
+Set-ADAccountPassword -Identity Apprentice02 -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "$(($PSVersionTable.BuildVersion).ToString())" -Force)
 	Write-Output "The password for the next level is the short name of the domain in which this server is a part of." -n > C:\Users\Apprentice02\Desktop\challenge.txt
 
 Set-ADAccountPassword -Identity Apprentice03 -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "army" -Force)
