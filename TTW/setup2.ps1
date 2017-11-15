@@ -556,8 +556,8 @@ Set-ADAccountPassword -Identity Wizard04 -Reset -NewPassword (ConvertTo-SecureSt
 	attrib +s +h C:\share\WARRIORS\SYNmurai\8\HOME\3\HOME\7\booty
 	Write-Output "Arrgh!  just some old boot!  " -n > "C:\share\WARRIORS\CodeSlinger\3\HOME\4\HOME\5\BOOTY"
 	attrib +s +h C:\share\WARRIORS\CodeSlinger\3\HOME\4\HOME\5\BOOTY
-	Write-Output "Arr!  Well Done Matey!  p@ss_w0rd - Gawld" -n > "C:\share\WARRIORS\Rang3r\8\HOME\3\HOME\9\ΒΘΘΤΨ"
-	Write-Output "Congratulations! You have completed the exercise!" -n > "C:\share\WARRIORS\Rang3r\8\HOME\3\HOME\9\ΒΘΘΤΨ"
+	Write-Output "Arr!  Well Done Matey!  p@ss_w0rd - b00ty" -n > "C:\share\WARRIORS\Ranger\8\HOME\3\HOME\9\ΒΘΘΤΨ"
+	Write-Output "Congratulations! You have completed the exercise!" -n > "C:\share\WARRIORS\Ranger\8\HOME\3\HOME\9\ΒΘΘΤΨ"
 	attrib +s +h "C:\share\WARRIORS\Rang3r\8\HOME\3\HOME\9\ΒΘΘΤΨ"
 	icacls "C:\share\WARRIORS" /grant Wizard03:R /T /C
 	
