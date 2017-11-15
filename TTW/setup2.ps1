@@ -178,27 +178,27 @@ Add-ADGroupMember -Identity "CN=SYNmurais,CN=Users,DC=army,DC=warriors" -Members
 
 $users1 = @("Apprentice01","Apprentice02","Apprentice03","Apprentice04","Apprentice05","Apprentice06","Apprentice07","Apprentice08","Apprentice09","Apprentice10")
 foreach ($user in $users1) {
-	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -nobanner
+	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -accepteula -nobanner
 }
 $users2 = @("Fighter01","Fighter02","Fighter03","Fighter04","Fighter05","Fighter06","Fighter07","Fighter08","Fighter09","Fighter10")
 foreach ($user in $users2) {
-	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -nobanner
+	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -accepteula -nobanner
 }
 $users3 = @("Paladin01","Paladin02","Paladin03","Paladin04","Paladin05","Paladin06","Paladin07","Paladin08","Paladin09","Paladin10")
 foreach ($user in $users3) {
-	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -nobanner
+	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -accepteula -nobanner
 }
 $users4 = @("Wizard01","Wizard02","Wizard03","Wizard04","Wizard05","Wizard06","Wizard07","Wizard08","Wizard09","Wizard10")
 foreach ($user in $users4) {
-	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -nobanner
+	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -accepteula -nobanner
 }
 $users5 = @("OSsassin01","OSsassin02","OSsassin03","OSsassin04","OSsassin05","OSsassin06","OSsassin07","OSsassin08","OSsassin09")
 foreach ($user in $users5) {
-	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -nobanner
+	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -accepteula -nobanner
 }
 $users6 = @("SYNmurai","Ranger","CodeSlinger","MASTER")
 foreach ($user in $users6) {
-	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -nobanner
+	psexec -accepteula -u army\$user -p password \\$(hostname) cmd /c "exit" -accepteula -nobanner
 }
 
 
