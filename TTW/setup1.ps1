@@ -1,5 +1,6 @@
 $ErrorActionPreference = 'SilentlyContinue'
 New-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters" -Name DisabledComponents -Value 0XFFFFFFFF -PropertyType DWord | Out-Null
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force
 Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
 Install-ADDSForest `
 -CreateDnsDelegation:$false `
