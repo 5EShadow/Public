@@ -128,7 +128,7 @@ Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Syste
 
 $users1 = @("Apprentice01","Apprentice02","Apprentice03","Apprentice04","Apprentice05","Apprentice06","Apprentice07","Apprentice08","Apprentice09","Apprentice10")
 foreach ($user in $users1) {
-New-ADUser -Name "CN=$user,OU=Apprentice,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
+New-ADUser -Name $user -Path "OU=Apprentice,OU=WARRIORS,DC=army,DC=warriors" -AccountPassword "password" -ChangePasswordAtLogon $false -CannotChangePassword $false -AccountPasswordneverexpires $false -AccountExpirationDate $expire -Enabled $true -AllowReversiblePasswordEncryption $false 
 Add-ADGroupMember -Identity "CN=Apprentices,CN=Users,DC=army,DC=warriors" -Members $user
 }
 start-sleep -s 1
