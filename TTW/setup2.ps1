@@ -579,5 +579,8 @@ Write-Output '$env:path += "$ProfileRoot"' >> C:\Windows\System32\WindowsPowerSh
 icacls C:\Windows\System32\Windows\PowerShell\v1.0\start.ps1 /grant Everyone:F /T /C
 icacls C:\Windows\System32\setup2.ps1 /grant Everyone:F /T /C
 icacls C:\Windows\System32\PsExec.exe /grant Everyone:F /T /C
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name AutoAdminLogon -Value 0
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name DefaultUserName -Value "nobody"
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name DefaultPassword -Value "NONE"
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -name "go" 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe -noprofile -sta -File "C:\windows\system32\start.ps1"'
 Restart-Computer
