@@ -128,7 +128,7 @@ resources:
           template: ツ
           params:
             lastname: { get_param: last_name }
-      image: Debian 16.04
+      image: Debian LXDE
       flavor: cy.small
       diskConfig: AUTO
       networks: 
