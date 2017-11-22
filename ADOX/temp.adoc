@@ -55,4 +55,4 @@ a netact listener must be started before the client +
 
 == Useful Resources
 
-[blue]#G# [red]#o# [yellow]#o# [blue]#g# [green]#l# [red]#e# :  (built-in tools) \+netcat +
+[blue]#G# [red]#o# [yellow]#o# [blue]#g# [green]#l# [red]#e# :  (built-in tools) +netcat +
