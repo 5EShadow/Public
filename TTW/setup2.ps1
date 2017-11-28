@@ -1,9 +1,8 @@
-ll$ErrorActionPreference = 'SilentlyContinue'
-
 #----- LOCK OUT Administrator from that which was set on yaml / Instructor ACCESS ONLY ---
 net user Administrator ReallyStrongPassword!!
-Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultPassword" -PropertyType String -Value 'ReallyStrongPassword!!'
+Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\winlogon" -Name "DefaultPassword" -Value 'ReallyStrongPassword!!'
 Update-Help -Force
+
 #----- OUs ---
 New-ADOrganizationalUnit -Name WARRIORS -Path "DC=army,DC=warriors"
 New-ADOrganizationalUnit -Name Apprentice -Path "OU=WARRIORS,DC=army,DC=warriors"
