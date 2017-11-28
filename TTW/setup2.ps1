@@ -13,7 +13,7 @@ New-ADOrganizationalUnit -Name OSsassin -Path "OU=WARRIORS,DC=army,DC=warriors"
 New-ADOrganizationalUnit -Name SYNmurai -Path "OU=WARRIORS,DC=army,DC=warriors"
 
 #----- Security Groups ---
-New-ADGroup -Name Apprentices -Path "CN=Users,DC=army,DC=warriors" -GroupCategory Security -GroupScope Universal
+New-ADGroup -Name Apprentices -Path "CN=Users,DC=army,DC=warriors" -GroupCategory Security -GroupScope Global
  
 New-ADGroup -Name Fighters -Path "CN=Users,DC=army,DC=warriors" -GroupCategory Security -GroupScope Global 
 Add-ADGroupMember -Identity "CN=Fighters,CN=Users,DC=army,DC=warriors" -Members "CN=Apprentices,CN=Users,DC=army,DC=warriors"
@@ -82,16 +82,16 @@ new-SMBshare -path "C:\share" `
 
 Add-NTFSAccess -Path C:\share -Account 'Everyone' -AccessRights Read
 
-icacls "C:\share\WARRIORS" /grant Everyone:R /C
-icacls "C:\share\WARRIORS\MASTER" /grant MASTER:F /T /C
-icacls "C:\share\WARRIORS\CodeSlinger" /grant CodeSlinger:F /T /C
-icacls "C:\share\WARRIORS\Ranger" /grant Ranger:F /T /C
-icacls "C:\share\WARRIORS\SYNmurai" /grant SYNmurais:F /T /C
-icacls "C:\share\WARRIORS\OSsassins" /grant OSsassins:F /T /C
-icacls "C:\share\WARRIORS\Wizards" /grant Wizards:F /T /C
-icacls "C:\share\WARRIORS\Paladins" /grant Paladins:F /T /C
-icacls "C:\share\WARRIORS\Fighters" /grant Fighters:F /T /C
-icacls "C:\share\WARRIORS\Apprentices" /grant Apprentices:F /T /C
+icacls --% "C:\share\WARRIORS" /grant Everyone:R /C
+icacls --% "C:\share\WARRIORS\MASTER" /grant "MASTER":f /t /c
+icacls --% "C:\share\WARRIORS\CodeSlinger" /grant "CodeSlinger":f /t /c
+icacls --% "C:\share\WARRIORS\Ranger" /grant "Rangers":f /t /c
+icacls --% "C:\share\WARRIORS\SYNmurai" /grant "SYNmurais":f /t /c
+icacls --% "C:\share\WARRIORS\OSsassin" /grant "OSsassins":f /t /c
+icacls --% "C:\share\WARRIORS\Wizard" /grant "Wizards":f /t /c
+icacls --% "C:\share\WARRIORS\Paladin" /grant "Paladins":f /t /c
+icacls --% "C:\share\WARRIORS\Fighter" /grant "Fighters":f /t /c
+icacls --% "C:\share\WARRIORS\Apprentice" /grant "Apprentices":f /t /c
 
 #----- DISABLES PASSWORD COMPLEXITY REQ AND ENABLES LOCAL LOGIN FOR USERS OTHER THAN ADMIN ---
 
