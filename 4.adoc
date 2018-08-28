@@ -1,0 +1,539 @@
+:doctype: book
+:stylesheet: ../cctc.css
+image::https://git.cybbh.space/global-objects/resources/raw/master/images/cyber-branch-insignia-official.png[Cyber,width=128,float="right"]
+
+U.S. Army Cyber School +
+2017
+
+:numbered!:
+
+== *Linux Section 4: Auditing and Logging*
+
+{empty} +
+
+== Skills and Objectives
+
+{empty} +
+
+.*SKILL 9 Identify auditing activities*
+** 9.1 Explain system logging
+** 9.2 Identify application logging
+** 9.3 Explain authentication and authorization logs
+
+.*SKILL 10: Identify actions that contribute to log files*
+** 10.1 Describe the actions that contribute to entries in log files
+** 10.2 Analyze log files for anomalous activity
+{empty} +
+
+== Practical Exercises
+
+Each practical exercise is further detailed on Blackboard, to include scenarios, grading, and submission standards.
+{empty} +
+
+=== Activity: JOURLOG
+=== Activity: AUDITDfiles
+
+== Faciliation:
+
+=== Facilitation 9-10
+{empty} +
+
+
+=== SKILL 9: Identify auditing activities
+
+==== 9.1 Explain system logging
+.*Linux Logging*
+
+* Challenges:
+** Logs can be cryptic
+** Logging isn’t free
+** Logging too much
+** Logging too little
+** Not analyzing logs
+** Not looking at the right logs
+** Not logging the right system(s)
+** Time normalization
+** Getting management aboard
+
+*Suggestions*
+
+* Use a system naming scheme that is meaningful and easy to interpret
+
+* Use a user naming scheme that is meaningful and easy to interpret
+
+* Manage your syslog to separate logs based on what makes sense.  Example:  you could have everything logging to the same file, but looking for an event would be like searching for a needle in a haystack.
+
+*Must!*
+
+* Synchronize time across your network
+
+* Control access to logs!
+
+*Local Log Management (automated)*
+
+* Logrotate is a program that can manage your local log files
+* Use cron to run logrotate
+* The main configuration file contains configuration settings for all logs is /etc/logrotate.conf
+
+* Individual configuration files are kept in the /etc/logrotate.d directory
+----
+Some of the settings you can manage are:
+	How long to keep the backup log files
+	How many copies to keep
+	Type of compression to use to compress backup logs
+	And many others
+----
+*Local Log Management (manual)*
+
+You should backup/analyze your logs before cleaning.
+
+Wipe logs manually:
+----
+	cat /dev/null > /var/log/messages > /var/log/auth.log
+	truncate -s 0 /var/log/messages /var/log/auth.log
+----
+Question: Why do this as opposed to deleting/recreating?
+
+
+Truncate old entries in text log files:
+----
+	echo "$(tail -n 50 /var/log/auth.log)" > /var/log/auth.log
+----
+Question: Will the truncate command work to essentially do the same thing?
+
+<<1>>
+
+.*Two main types of logging systems:*
+* Syslog (rsyslog, syslog-ng)
+** RFC5424 - Syslog protocol (https://www.rfc-editor.org/rfc/rfc5424.txt)
+** `/etc/{syslog,rsyslog}.conf` settings file to determine how to handle messages
+** default location for log files on most Linux variants is `/var/log`
+** capable of sending log messages to a networked syslog server (udp/tcp 514) - Strongly recommended
+** reads messages off the /dev/log domain socket
+
+.*DEMO: Show the logging domain sockets on SysVinit distro*
+----
+ls -la /dev/log         #point out that this is a domain socket type
+ls -la /proc/kmsg       #kernel ring buffer
+dmesg                   #read from kernel ring buffer, non-persisted
+----
+
+.*DEMO: Show `/etc/{syslog,rsyslog}.conf` on sysVinit distro*
+----
+vi /etc/{syslog,rsyslog}.conf
+# point out modules, global directives, rules sections
+# mention that if global directives include an include section, then these files need to be examined as well
+man {syslog,rsyslog}
+# show network config info (@ or @@)
+----
+*Rsyslog rules*
+
+* Use an asterisk to specify all facilities or priorities: `cron.*, *.err`
+* Use commas to separate names of multiple facilities and priorities: `cron,lpr.=notice,=warning`
+* Use semicolons to separate multiple filters on the same line: `*.notice;lpr.none;authpriv.none;cron.none`
+* Use an exclamation point before a priority to match all messages except those with that priority: `lpr.!info,!debug`
+* Use “none” for a priority to not redirect messages for that facility: `authpriv.none`
+
+*Rsyslog rule examples:*
+
+* Match all kern messages with any priority: `kern.*`
+
+* Match all mail messages with crit or higher priority:	`mail.crit`
+
+* Match all lpr and mail messages with warning or err priority: `lpr,mail.warning,err`
+
+* Match all daemon messages except those with info or debug priority: `daemon.!info,!debug`
+
+* Match mail messages only with .info priority: `mail.=info`
+
+*Complete Facility/Priority Rule*
+----
+# The authpriv file has restricted access (sync).
+`authpriv.*      		/var/log/secure`
+
+# Log all the mail messages in one place (no sync).
+`mail.*            		-/var/log/maillog`
+
+# Save uucp and news errors of level crit and higher in a special file.
+`uucp,news.crit          /var/log/spooler`
+
+# TCP wrapper logs with mail.info, send to tty2
+`mail.=info 			/dev/tty2`
+
+# Send all .info and higher to remote syslog 10.10.10.1 port 514
+`*.info      @@10.10.10.1:514`
+----
+.*DEMO: Create a rule log*
+----
+vi /etc/{syslog,rsyslog}.conf
+local0.* /var/log/local0.log        #add this to the [r]syslog.conf rules section
+#restart syslog                     #/etc/init.d/syslog restart
+logger -p local0.info Test message
+cat /var/log/local0.log
+----
+
+* Journald
+** Part of systemd
+** config file located at /etc/systemd/journald.conf
+** in most default configs, works with rsyslog to record log files - controlled by the ForwardToSyslog setting in journald.conf
+** can be configured to persist log files itself, default in /var/log/journal - controlled by the Storage setting in journald.conf
+** offers fine grain querying of the journal log via journalctl command
+
+.*Journalctl examples <<3>>*
+----
+journalctl --help	                        #  Lots of different options
+journalctl -u dhcpcd		                # Entries associated with unit
+journalctl --list-boots                     # boot message blocks
+journalctl -b <boot msg log #>              # boot messages
+journalctl --since "1 hour ago"             # time ranges
+journalctl -u ssh.service 	                # view specific unit log
+
+journalctl --SINCE "2017-06-26 23:00:00" --UNTIL "2017-06-26 23:20:00"
+journalctl -u cron.service                  # service specific messages
+journalctl -n 50 --since "1 hour ago"       # Last 50 messages from 1 hour ago
+journalctl -b -1  -p "crit"                 # by priority 
+id                                          # get UID
+journalctl _UID=0                           # messages for UID 0
+journalctl --vacuum-time=5d                 # Retain only the past five days
+journalctl --vacuum-size=20M                # Retain only the past 20 MB
+----
+
+
+.*DEMO: Demo setting up journald for persistence
+----
+less /etc/systemd/journald.conf     #point out the storage setting (should be auto)
+ls -la /dev/log             #point out that this is a sym link to journald log domain socket
+
+tail /var/log/messages      #confirm this location on your system
+journalctl -p info -n 20    #show the message is also in journal
+reboot
+grep -i test /var/log/messages
+journalctl -p info          #show that the message remains in log file but not in journalctl
+
+mkdir /var/log/journal      #This is the folder expected by journald in 'auto' mode, be sure you are root
+logger -p local0.info another test message      #The first log message received by journald will cause it to check for the presence of the /var/log/journal folder, and it will dump the contents of the journald buffer into the system.journal file
+journalctl -p info -n 10    #show it is there
+ls -la /var/log/journal     #show there is a file now
+reboot
+journalctl -p info | grep test  #show the message is now persisted
+
+rm -rf /var/log/journal     #delete the journalctl directory and file
+journalctl                  #show that the journalctl buffer is now empty, as it had pushed everything to disk
+----
+
+==== 9.2 Identify application logging
+Applications can choose to handle their own logging, or to use the syslog or journald logging applications to handle their logs.
+
+*Rsyslog*
+
+rsyslog rules consists of a filter and an action on a single line
+
+The filter is written to match items of interest in a message
+
+The action is performed is the filter matches
+
+Facility/Priority-based filters filter syslog messages using facility and priority separated by a period and have the form: `FACILITY.PRIORITY`
+
+* Application Syslog components
+** *Facility* is a code used to identify the program type that generates
+the message for the log. RFC 5424 defines numerical codes for the
+facilities listed below:
+
+
+.*Facility Codes*
+|===
+|*Facility* |*Code*
+|0|kernel messages
+|1|user-level messages
+|2|mail system
+|3|system daemons
+|4|security/authorization messages
+|5|messages generated internally by syslogd
+|6|line printer subsystem
+|7|network news subsystem
+|8|UUCP subsystem
+|9|clock daemon
+|10|security/authorization messages
+|11|FTP daemon
+|12|NTP subsystem
+|13|log audit
+|14|log alert
+|15|clock daemon (note 2)
+|16|local use 0 (local0)
+|17|local use 1 (local1)
+|18|local use 2 (local2)
+|19|local use 3 (local3)
+|20|local use 4 (local4)
+|21|local use 5 (local5)
+|22|local use 6 (local6)
+|===
+
+** RFC 5424 defines numerical codes for the *severity level* listed
+.*Severity Codes*
+|===
+|*Severity*|*Code*
+|0|Emergency: system is unusable
+|1|Alert: action must be taken immediately
+|2|Critical: critical conditions
+|3|Error: error conditions
+|4|Warning: warning conditions
+|5|Notice: normal but significant condition
+|6|Informational: informational messages
+|7|Debug: debug-level messages
+|===
+----
+“Every Alley Cat Eats Watery Noodles In Doors”
+
+“Emergencies Are Critical Errors Which Nobody Is Debugging”
+----
+** RFC 5424 defines the *message* component (aka MSG) which contains the CONTENT, which is the details of the message. +
+
+* *Journald* +
+Journald doesn't use Syslog facilities by default (can be enabled in conf). +
+Instead, journald is designed to work with PIDs, Process Names, and Service IDs. It does use severity codes. +
+
+
+==== 9.3 Explain authentication and authorization logs*
+{empty} +
+.*Auditd*
+
+* auditd is the userspace component to the Linux Auditing System.
+* Linux Auditing System operates at the kernel level (requires a kernel recompile to install)
+* audit rules by default kept in /etc/audit/auditd.rules, config in /etc/audit/auditd.conf  Determines how the audit system functions once the daemon has been started.
+
+* auditd has been integrated into systemd on modern distros
+
+
+*DISCUSSION: Format of a audit message:*
+https://www.digitalocean.com/community/tutorials/how-to-use-the-linux-auditing-system-on-centos-7 +
+
+.*DEMO: Setup & Search audit logs*
+----
+dpkg --get-selections | grep auditd         #should already be installed, binary is typically under /sbin/ and might not be in a non-root user path
+
+apt-get install -y auditd                   #auditd should be on most modern linux systems by default, this command should not be necessary
+auditctl -w <some_file> -k "<comment>" -p rwxa
+auditctl -l                                 #lists auditing rules +
+chmod 777 <some_file>
+ausearch -f <some_file>                     #searches audit logs for target file (tracked by inode) +
+mv <some_file> <new_file_name>
+ausearch -f <some_file>                     #searches audit logs for target file (tracked by inode, despite changed name) +
+auditctl -d <some_file>                     #deletes single rule for file: <some_file> +
+auditctl -D                                 #deletes ALL audit rules on the system +
+less /var/log/audit/audit.log
+ausearch -m LOGIN
+auditctl --help                             #how to create new rules on systemd +
+----
+
+* Debian `/var/log/auth.log` or Red Hat `/var/log/secure` - store info about logins.
+* `/var/log/btmp`                       – this log tracks failed login attempts and is not human readable.
+** Commands to use:
+*** `last –f /var/log/btmp`             - to follow bad login attempts real time
+*** `lastb -`
+* `/var/run/utmp`                       – this log tracks who is currently using the system and is not human readable.
+** Not all programs / services use utmp logging so it is not 100%
+reliable.
+** Commands to use:
+*** `last –f /var/log/utmp`             – follows logged in users
+*** `who` – shows who is logged into the system and how
+* `/var/log/wtmp`                       – this log tracks history of which users have logged into and out
+of the system and is not human readable.
+** Can be used to determine when system was last rebooted or shutdown
+and by who.
+** Identifies the tty user logged into and whether it was a local login
+or not and the remote IP used to connect.
+** Commands to use:
+*** `last`                              – show most recently logged in users and if they are still
+connected.
+*** `last –x`                           – show system shutdown entries and run level changes.
+* `/var/log/lastlog`                    - database file recording the last login for each account
+** Commands to use:
+*** `lastlog`                           - records last time account logged into system (console logins only)
+
+=== SKILL 10: Identify actions that contribute to log files
+
+==== 10.1 Describe the actions that contribute to entries in log files
+* Multiple system calls available to programs to create syslog or journald log entries. <<2>>
+** syslog() via libc
+** sd_journal_print() via Journal API
+** standard output and error of system services
+** kernel ring buffer
+** audit records via audit subsystem
+
+.*DISCUSSION: What logs should you be concerned with during defense and offensive operations?*
+* Login logs
+* Activity logs that reveal details of attacks
+* Application-specific logs (ie. Apache during web attacks)
+* Remote logging settings
+
+.DEMO: Reading `/var/log/auth.log`
+----
+# create log entries to discuss: 
+su <user_name>      #enter wrong password .. do this multiple times FAST, then enter the correct password.
+tail -20 /var/log/auth.log
+# discuss the different parts of the log entries with students, making sure to note the short time difference of each entry, and what it could mean.
+----
+
+==== 10.2 Analyze logs for anomalous activity
+.*DISCUSSION: What classifies anomalous activity?*
+* Ideal to start with a known-good baseline
+* Unusual user activity (ie. logons, sudo requests, file accesses)
+* Programs accessing resources they shouldn't be (network activity, file accesses)
+* Differences between log files that should be in sync (remote vs local, journald vs log files)
+
+
+*First you have to understand which log you are analyzing*
+
+Some keywords common for /var/log/messages:
+
+	Failed, Denied, Error, Segfault
+
+Maintain a file/document with line-by-line list of words/patterns and if you are not sure of the case, use case insensitive search:
+
+	# grep -if mykeywordfile /var/log/messages
+
+Output may take additional massaging to glean information, that is pipe though additional commands to give the data meaning.
+
+
+First you have to understand which log you are analyzing
+
+Some keywords common for /var/log/messages:
+
+	Failed, Denied, Error, Segfault
+
+Maintain a file/document with line-by-line list of words/patterns and if you are not sure of the case, use case insensitive search:
+
+	# grep -if mykeywordfile /var/log/messages
+
+Output may take additional massaging to glean information, that is pipe though additional commands to give the data meaning
+
+Did any logins succeed from these IP addresses?
+
+----
+Example successful authentication:
+Jan 14 13:30:41 localhost sshd[4299]: Accepted password for student from 192.168.1.100 port 56909 ssh2
+----
+
+Use failed ssh attempts to see if any succeeded:
+----
+# grep -f failedsshlist.txt /var/log/secure | grep Accepted
+----
+Any output from this command will be bad
+
+.*Useful commands and utilities for log processing:*
+----
+cat <logfile> | grep -v <phrase>            #eliminate messages you don't care about with grep -v 
+tail -XX <logfile>                          #only look at last XX entries
+grep -i <phrase> <logfile>                  #search for specific info in a log file
+last                                        #reads from wtmp by default
+last -f /var/log{wtmp,btmp}                 #view binary wtmp, btmp files (wtmp: login/logout history; btmp: bad login history)
+last -f /var/run/utmp                       #view binary utmp file (current login snapshot)
+lastlog                                     #view lastlog file
+dmesg                                       #view volatile kernal ring buffer
+----
+
+.*DEMO: Reading dmesg entries*
+
+create log entries to discuss:
+demo requires a simple program, vulnerable to Buffer Overflows .. code follows below ..
+show students uncompiled code first; briefly explain the vulnerable gets() function,
+allocated buffer space [20], base and instruction pointer length, etc.
+compile the program using gcc or tcc (if you don't like errors), and execute it, gradually entering increasing amounts of input,
+till an illegal instruction, and eventually buffer overflow
+*NOTE:* The length of the base and instruction pointers depends largly on the processor's architecture.  Here the BP and IP are each 8 bytes +
+      so ... *8* (bytes BP) *+ 20* (bytes password/string buffer) *+ 8* (bytes IP) *= 36 bytes* to completely overrun the IP. +
+      
+image:../../resources/images/linux_4_1.png["BoF1",width=650,height=135] +
+{empty} +
+
+Be sure to display kernel ring logs in dmesg as you progress to overwrite the instruction pointer: +
+
+image:../../resources/images/linux_4_2.png["BoF2"] +
+{empty} +
+
+explain the various parts of the dmesg log entries, and what happened in the stack, causing them to be generated. +
+Keep this demo short, and easy to understand. +
+
+.*Useful commands and utilities for auditing:*
+----
+auditctl – program for configuring auditing
+
+	Ex:  auditctl -w /etc/shadow -p wrxa -k SHADOW
+		-l list rules
+		-w watch
+		-W remove rule
+		-k keyword (to ease searching)
+		-p what to watch (These aren’t permissions!!!)
+			w-write – attempt to write to file
+			r-read – attempt to read from file
+			x-execute – attempt to execute file
+			a-attributes – attempt to change attributes
+
+aureport – program for creating reports
+		-f files
+
+ausearch – program to search for events
+		-k keyword
+
+----
+*Some Auditing Tools*
+Tripwire - Tripwire scans the file system as directed by the administrator and stores information on each file scanned in a database. At a later date the same files are scanned and the results compared against the stored values in the database. Changes are reported to the user. Cryptographic hashes are employed to detect changes in a file without storing the entire contents of the file in the database.  While useful for detecting intrusions after the event, it can also serve many other purposes, such as integrity assurance, change management, and policy compliance.
+
+AIDE - AIDE was created as a Tripwire replacement for baseline control, change detection, and rootkit detection. Using regular expression (regex) rules detailed in configuration files, it creates a database for validating the integrity of files. The tool is strictly command-line (CLI) driven and scheduled/triggered via cron to run system scans for detecting changes in directories and files to be monitored.
+
+
+*Buffer Overflow Vulnerable C Program:* +
+----
+#include <stdio.h>
+
+char *secret = "PassWord1234";
+
+int authorization()
+{
+	char password[20];
+	printf("Enter Password:  ");
+	gets(password);
+	if (!strcmp(password,secret))
+		return 1;
+	else
+		return 0;
+}
+
+int main()
+{
+	if (authorization()) 
+	{
+	    printf("ACCESS GRANTED! \n");
+	}
+	else 
+	{
+	    printf(" A C C E S S   D E N I E D ! \n");
+	}
+		return 0;
+}
+----
+
+*Sources:*
+
+[[[1]]] A. RagoStephen and R. StevensW, Advanced Programming in the UNIX Environment, Third Edition. Addison-Wesley Professional, 2013.
+
+[[[2]]] https://manpages.debian.org/experimental/systemd/systemd-journald.socket.8.en.html
+
+[[[3]]] https://www.loggly.com/ultimate-guide/using-journalctl/
+
+https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/ch-Viewing_and_Managing_Log_Files.html
+
+https://www.loggly.com/ultimate-guide/linux-logging-basics/
+
+https://help.ubuntu.com/community/LinuxLogFiles
+
+http://blog.codeasite.com/how-do-i-find-apache-http-server-log-files
+
+http://resources.infosecinstitute.com/log-analysis-web-attacks-beginners-guide/#gref
+
+https://wiki.ubuntu.com/BasicSecurity/DidIJustGetOwned
+
+https://tools.ietf.org/html/rfc5424.html
+
+_ +
+_

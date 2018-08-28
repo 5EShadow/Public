@@ -1,0 +1,367 @@
+:doctype: book
+:stylesheet: ../cctc.css
+image::https://git.cybbh.space/global-objects/resources/raw/master/images/cyber-branch-insignia-official.png[Cyber,width=128,float="right"]
+
+U.S. Army Cyber School +
+2017
+
+:numbered!:
+ 
+= Linux Section 2: Boot Process
+
+{empty} +
+
+== Skills and Objectives
+
+{empty} +
+
+.*SKILL 4: Describe the Linux boot process*
+** 4.1 Identify components of the boot process
+** 4.2 Explain the post kernel boot process
+** 4.3 Describe boot process differences across Linux variants
+** 4.4 Describe partitions
+
+.*SKILL 5: Assess boot configuration files*
+** 5.1 Identify components of the boot configuration file
+** 5.2 Identify system changes after modification of the boot configuration file
+
+{empty} +
+
+== Practical Exercises
+
+Each practical exercise is further detailed on Blackboard, to include scenarios, grading, and submission standards.
+{empty} +
+
+==== Activity: MBRoken
+
+==== Activity: DASBOOT
+
+{empty} +
+
+== Faciliation:
+
+==== Facilitation 4-5
+
+=== *SKILL 4: Describe the Linux boot process*
+==== 4.1 Identify components of the boot process
+.*Firmware Startup*
+* BIOS
+** Reads first sector on the boot disk (MBR) to load bootloader into memory
+** bootloader initializes hardware to load the rest of the OS
+* UEFI - Universal Extensible Firmware Interface
+** Created by Intel in 1998
+** Utilizes a special disk partition, called EFI System Partition (ESP), to store bootloader programs of any size
+** typically /boot/efi on linux (seen as /usr/lib/systemd/boot/efi)
++
+----
+find / -type d -name efi    #find efi folder
+----
+** UEFI built in boot manager allows user to choose which bootloader (.efi) to use
+** UEFI secure boot - only load digitally signed bootloaders
+** UEFI is contained in a vfat formatted partition that contains boot loaders for installed OS's or boot managers such as GRUB
+*** UEFI linux command: efibootmgr
+
+.*Bootloaders*
+* Loads the kernel into memory
+* Also loads an initrd (initial RAM disk) into memory
+* Linux Loader (LILO)
+** Legacy Linux bootloader
+** Doesn't work with UEFI
+** Does not have knowledge of the the file system - GRUB does know about the file system
+* Grand Unified Bootloader (GRUB Legacy)
+** Menu driven boot menu
+*** Can boot different OS's depending on default setting or choose an OS to load
+** Controlled via a config file (location depends on distro, /boot/grub.conf or /boot/grub/grub.cfg or /boot/grub/menu.lst)
+* GRUB 2.x is completely different than GRUB 1.x
+** Config file is grub.cfg (often derived from other files)
+*** GRUB 2.x installation command: grub-install
+*** GRUB 2.x configuration command: grub-mkconfig
+*** GRUB 2.x configuration options: /etc/default/grub (location on each distribution may vary)
++
+----
+dmesg | less
+/root               #find the root= variable set by GRUB, note the initrd on the same line
+lsblk -o UUID,NAME,MOUNTPOINT
+----
+
+.*Kernel Startup*
+* Stage 0 (process 0):
+** establishes memory management, detects CPU type, page tables
+** mounts initrd and unpacks initramfs from it
+*** Initial RAM Disk (initrd) is used by kernel as temporary root file system until kernel is booted and the real root file system is mounted. It contains necessary drivers compiled inside, which helps it to access the hard drive partitions, and other hardware (specified with kernel option “initrd=” or in grub entry “initrd”).
+** Mounts the root file system as specified in the “root=” in grub.conf (grub 2.X) menu.lst (grub 1.X)
+** Kernel executes the /sbin/init program by default (can be overridden with kernel option “init=”)
+** mounts initramfs as initial root file system
+** initramfs loads drivers, mounts actual root file system as passed in root= by bootloader
+** initramfs runs /sbin/init
++
+----
+dmesg | less
+/initramfs   # Searches for initramfs in the dmesg output
+----
+
+==== 4.2 Explain the post kernel boot process
+.*/sbin/init*
+* Parent process of all user space programs, always PID of 1
+* 3 main initialization processes
+** *System V init:*
+*** Based on run levels
+*** 2 Primary components
+**** /etc/inittab file
+***** Determines the initial runlevel for the system to boot into.
+***** runlevel determined by initdefault option
+***** Application run for applicable runlevels
++
+.*DEMO: Inittab file*
+----
+less /etc/inittab
+----
+**** bootscripts
+***** /etc/init.d/rc
+***** Script that runs Start and Kill scripts of out applicable rc folders
++
+.*DEMO: View RC script*
+----
+file /etc/init.d/rc
+less /etc/init.d/rc
+----
+
+.*DEMO: View SysVinit services*
+----
+service --status-all        #runs all scripts under /etc/init.d/ with the 'status' command
+----
+
+** *System D*
+*** Initiated in 2010 to create a service manager for Linux
+*** Includes device management (udevd) and logging (journald)
+*** /sbin/init sym linked to /lib/systemd/systemd
+**** runs the /etc/systemd/default.target which is a sym link to desired initial target in /lib/systemd/system
+**** target creates a dependency tree which calls other target scripts
+**** Multiple systemd programs available to handle 
+
+.*DEMO: SystemD files*
+----
+systemctl get-default           #default target
+systemctl list-dependencies     #show tree of dependencies
+systemctl list-units --type service  #state of services
+systemctl list-units --type target   #state of targets
+systemctl list-unit-files           #show services and their startup states
+----
+
+https://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet
+
+** Upstart
+*** Created for Ubuntu desktops (Ubuntu 15.04+ are systemd)
+*** event driven, starts jobs based on events
+*** configuration files for jobs kept in /etc/init/
+*** continues monitoring the system after startup
++
+----
+initctl list
+----
+
+==== 4.3 Describe boot process differences across Linux variants
+* Described in previous objects
+
+==== 4.4 Describe partitions
+* A partition is the logical segmentation of a single storage device into multiple usable sections.
+* Two main types of hard disks:
+** Master Boot Record (MBR):
+*** hard disks utilizing a MBR can have a maximum of 4 primary partitions and a max size of 2 TB each.
+**** Typically the MBR is located on /dev/hda or /dev/sda
+**** It contains information about GRUB (or LILO or other Boot Loader system)
+*** Extended partitions overcame the 4 primary issue by moving addressing for additional partitions into the extended partition itself rather than in the MBR table
+*** the fdisk utility is used to manage MBR disk partitions
+
+|===
+|image:../../resources/images/linux_2_TBD.jpg[MBR,float="left"]
+|MBR Disk Layout <<1>> +
+|===
+{empty} +
+
+|===
+|image:../../resources/images/linux_2_1.jpg[MBR Extended,float="left"]
+|MBR Disk Layout <<1>> +
+|===
+{empty} +
+
+** GUID Partition Table (GPT) disks:
+*** Up to 128 partitions
+*** Partition sizes over 2TB
+*** the gdisk utility is used to manage GPT partitions
+
+* Logical Volume Management (LVM)
+** Linux utilizes LVM physical volumes to create pools of storage known as volume groups
+** Volume groups can be expanded without repartitioning the underlying disk
+
+* Installation of Linux requires a minimum of one partition containing the / (root) directory.  Typical installation will include a partition for swap space as well which is an extension of Linux memory, however, this swap space can exist in a swap file as well.
+* The /etc/fstab configuration file is used to manage mounting partitions at boot time
+
+
+=== *SKILL 5: Assess boot configuration files*
+==== 5.1 Identify components of the boot configuration file
+.*5.1.1 Sys V Init*
+
+* /etc/inittab
+** Default runlevel is determined by the initdefault label
++
+----
+id:5:initdefault:
+----
+** Each line in inittab has an action <<2>>
++
+----
+sysinit     #executed at system boot
+respawn     #restarted when terminated (gettys)
+once        #executed a single time when run level entered
+wait        #executed when run level is entered, init waits for termination to continue
+----
+** Lines in the file are broken into:
++
+----
+id:rstate:action:process
+s2:23:wait:/sbin/rc 2       #id is s2, runlevels 2 or 3, wait action, execute '/sbin/rc/ 2'
+----
+* /etc/rc#.d folders:
+** K and S scripts
+** scripts typically link back to scripts in /etc/init.d/
+** When a runlevel is changed, first all 'K' scripts are executed in numeric order, then all 'S' scripts are run
+** runlevels 0 (halt) and 6 (reboot) will only stop scripts, so 'S' scripts are run with the stop command
+** Not all linux flavors of Sys V init follow this exact pattern, some only run K scripts when a lower runlevel is changed to.
+
+.*5.1.2 SystemD*
+* Described in 4.2
+
+.*5.1.3 Openrc*
+* Extension of sysv init, adds parallel service startup, and dependency based boot
+
+.*5.1.4 Busybox-init*
+* Looks to be used in embedded devices https://wiki.openwrt.org/doc/techref/process.boot
+
+
+==== 5.2 Identify system changes after modification of the boot configuration file
+.*SysV init* requires the runlevel to be changed for any modifications to the configuration to take place
+
+.*5.2.1 SysV Init* – start of post kernel boot process
+
+* Looks at the /etc/inittab file to decide the Linux run level.
+* Available run levels 0 through 6
+* Init identifies the default init level from /etc/inittab and uses that to load all appropriate program.
+* Execute ‘grep initdefault /etc/inittab’ on a sysv init system to identify the default run level
+* Set system time from time stored in hardware (can also use an ntp service)
+* Mount filesystems defined in /etc/fstab
+
+Starts the configuration of the environment for the system/users
+
+SysV Init and derivatives runlevels
+
+*   0 - halt (Do NOT set initdefault to this)
+*   1 - Single user mode
+*   2 - Multiuser, without networking
+*   3 - Full multiuser mode, with networking
+*   4 - unused or experimental - not a commonly used runlevel
+*   5 - X11 (GUI)
+*   6 - reboot (Do NOT set initdefault to this)
+
+* Sysv Init Runlevel programs
+
+When the Linux system is booting up, you might see various services getting started.
+For example, it might say “starting sendmail …. OK”. Those are the runlevel programs,
+executed from the run level directory as defined by your run level.
+/etc/rcX.d where X is the runlevel
+
+/etc/inittab example:
+----
+id:3:initdefault:
+
+# System initialization.
+i::sysinit:/etc/rc.d/rc.sysinit
+
+l0:0:wait:/etc/rc.d/rc 0
+l1:1:wait:/etc/rc.d/rc 1
+l2:2:wait:/etc/rc.d/rc 2
+l3:3:wait:/etc/rc.d/rc 3
+l4:4:wait:/etc/rc.d/rc 4
+l5:5:wait:/etc/rc.d/rc 5
+l6:6:wait:/etc/rc.d/rc 6
+
+# Trap CTRL-ALT-DELETE
+ca::ctrlaltdel:/sbin/shutdown -t3 -r now
+
+# Run gettys in standard runlevels
+1:2345:respawn:/sbin/mingetty tty1
+2:2345:respawn:/sbin/mingetty tty2
+3:2345:respawn:/sbin/mingetty tty3
+4:2345:respawn:/sbin/mingetty tty4
+5:2345:respawn:/sbin/mingetty tty5
+6:2345:respawn:/sbin/mingetty tty6
+----
+
+----
+telinit 3   #change to runlevel 3
+----
+
+.*5.2.2 SystemD*
+----
+systemctl isolate multi-user.target #change to multi-user.target
+----
+
+Instead of runlevels uses terms called targets (runlevels) and units (services):
+default.target is essentially the default runlevel (equivalent to initdefault in the inittab)
+
+Links to the targets are in /etc/systemd/system -- Can think of it as an rc directory on sysvinit
+
+Targets and units in /usr/lib/systemd/system/ -- Can think of this as /etc/init.d/
+
+----
+# Systemd – managed with systemctl
+systemctl status servicename (ex ssh.service)
+systemctl stop servicename
+systemctl start servicename
+systemctl disable servicename
+systemctl enable servicename
+----
+
+Logs managed and viewed with journalctl
+
+----
+journalctl -b		# view logs since last boot
+journalctl --since "2017-01-10" --until "2017-01-11 03:00"
+----
+
+https://www.digitalocean.com/community/tutorials/how-to-use-journalctl-to-view-and-manipulate-systemd-logs
+
+Systemd features:	
+
+* Simpler boot process as compared to the init
+* Systemd provides concurrent and parallel process of system boot so it ensures better boot speed
+* Processes are tracked using control groups, not by PIDs
+* Improved ways to handle boot and services dependencies.
+* Capability of system snapshots and restore
+* Monitoring of started services ; also capable of restarting any crashed services
+* Includes systemd-login module to control user logins.
+* Ability to add and remove components
+* Low memory foot prints and ability for job scheduling
+* Journald module for event logging and syslogd module for system log.
+* Protected services (ex: unable to kill auditd)
+
+http://linoxide.com/linux-how-to/systemd-boot-process/
+
+----
+
+
+{empty} +
+
+ifdef::backend-docbook[]
+[index]
+Example Index
+////////////////////////////////////////////////////////////////
+The index is normally left completely empty, it's contents being
+generated automatically by the DocBook toolchain.
+////////////////////////////////////////////////////////////////
+endif::backend-docbook[]
+
+[bibliography]
+==== References
+- [[[1]]] http://www.disk-partition.com/gpt-mbr/difference-between-mbr-and-gpt-1203.html
+- [[[2]]] https://www.cyberciti.biz/howto/question/man/inittab-man-page.php

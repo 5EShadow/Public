@@ -1,0 +1,948 @@
+:doctype: book
+:stylesheet: ../../../cctc.css
+image::https://git.cybbh.space/global-objects/resources/raw/master/images/cyber-branch-insignia-official.png[Cyber,width=128,float="right"]
+
+= Linux Facilitation Guide
+U.S. Army Cyber School 2017
+
+// Available at https://git.cybbh.space/CCTC/internal/builds/artifacts/master/file/facilitation-guides/linux/official_FGs/Linux_3_script_process_FG.pdf?job=genpdf
+
+'''
+
+:numbered!:
+ 
+= Linux Section 3: Scripting and Processes
+
+== Skills and Objectives
+
+.*SKILL 6: Identify Linux processes*
+* 6.1 Identify common processes for Linux startup
+* 6.2 Identify common processes for Linux machine
+* 6.3 Employ commands to enumerate processes
+* 6.4 Explain the functionality of daemons
+* 6.5 Discuss orphaned and defunct processes
+* 6.6 Identify the purpose of apt/aptitude
+* 6.7 Evalulate the validity of Linux processes
+
+.*SKILL 7: Develop shell scripts*
+* 7.1 Demonstrate basic familiarity with shell scripting
+* 7.2 Explain variables and variable manipulation
+* 7.3 Employ commands for string manipulation
+* 7.4 Identify hashing and file hashes
+* 7.5 Create a bash script to perform basic enumeration on a Linux machine
+
+.*SKILL 8: Identify Linux networking features*
+* 8.1 Describe the local name resolution process on a Linux host
+* 8.2 Describe the difference between regular and raw sockets
+* 8.3 Identify basic network services for Linux
+* 8.4 Employ commands to gather network information
+* 8.5 Enumerate active connections on a Linux machine
+* 8.6 Describe the advantages and disadvantages of Samba
+* 8.7 Explain the functionality of telnet
+* 8.8 Perform a file transfer using telnet
+* 8.9 Analyze network connections using Linux command line tools
+
+== Practical Exercises
+
+Each practical exercise is further detailed on Blackboard, to include scenarios, grading, and submission standards.
+
+== Faciliation:
+
+==== Facilitation 6-8
+
+=== *SKILL 6: Identify Linux processes*
+==== 6.1 Identify common processes for Linux startup
+* Linux Startup Processes
+
+** Start init which is the parent/grandparent of all processes.  Its process ID is 1, 
+and its parent is 0
+
+** Modern Linux kernels/distros also have kthreadd which is a kernel thread daemon 
+which is second after init so it will have a PID of 2 and will also have no parent. 
+kthreadd manages hardware and is directly handled by the kernel (kernel mode) 
+and have high priority.  They can be identified by the name enclosed in square brackets [].
+
+** Mount filesystems defined in /etc/fstab
+
+** Set system time from time stored in hardware (can also use an ntp service)
+
+** Supported filesystems in:  /proc/filesystems
+
+* DISCUSSION: Kernel vs user space
+** Kernel shares single memory space
+** Represented in ps list with []
+** User space programs each have virtual memory allocation
+** Services defined by the runlevel will be started.
+
+==== 6.2 Identify common processes for Linux machine
+* DEMO: Show a ps, point out /sbin/init and [kthreads]
+* Identify which ones are normal or common: (command ps -ef)
+** Which ones are user mode or kernel mode?
+
+----
+root      2315     1  0 07:37 ?        00:00:00 /sbin/dhcpcd -q
+root      2343     1  0 07:37 ?        00:00:00 /sbin/rpcbind
+root      2379     1  0 07:37 ?        00:00:00 /sbin/rpc.statd --no-notify
+root      2405     2  0 07:37 ?        00:00:00 [rpciod]
+root      2407     2  0 07:37 ?        00:00:00 [xprtiod]
+root      2435     1  0 07:37 ?        00:00:00 /usr/sbin/rpc.idmapd
+root      2461     2  0 07:37 ?        00:00:00 [nfsiod]
+root      2511     1  0 07:37 ?        00:00:00 /usr/sbin/cron
+root      2576     1  0 07:37 ?        00:00:00 /usr/sbin/lightdm
+root      2602     1  0 07:37 tty1     00:00:00 /sbin/agetty 38400 tty1 linux
+----
+
+==== 6.3 Employ commands to enumerate processes
+* Covered in basic shell commands
+*ps command (current shell “ps”, whole system “ps aux”, forest “ps f”)
+
+----
+ps -ef              # SysV
+ps -o "%cpu comm"
+
+ps auxf             # forest view (BSD style)
+ps axfo pid,ppid,comm
+----
+
+==== 6.4 Explain the functionality of daemons
+* DISCUSSION: daemon is an orphaned process waiting for an event in the background.
+** stdin, stdout and stderr are pointed to /dev/null
+
+* Starting and stopping can vary depending on init system (i.e. systemd, openrc, sysv, etc).
+
+** Usually works on all systems:
+
+----
+cd /etc/init.d/
+./servicename start
+./servicename restart
+./servicename stop
+----
+
+** Some non-systemd systems:
+----
+service sevicename start/restart/stop
+----
+
+** systemd:
+----
+systemctl start/restart/stop servicename
+----
+
+* Service configuration files typically stored in /etc, do “man servicename” for more info (i.e. “man sshd”)
+
+* DEMO: exec command
+
+----
+exec 3<>/dev/tcp/www.gentoo.org/80
+echo -e "GET / HTTP/1.1\r\nhost: www.gentoo.org\r\nConnection: close\r\n\r\n" >&3
+cat <&3
+----
+
+* DISCUSSION: Job control (jobs, fg, bg, ^z, kill %JID, &)
+
+* at – one shot job
+** reads a series of commands and executes them at a later time
+
+** DEMO: at command
+
+----
+at now + 5 min          #enter at command prompt
+echo Something          #throwaway command
+atq                     #list current at queue
+at -c <#>               #retrieve at command
+----
+
+* cron – recurring jobs
+
+** Cron format:
+
+----
+* * * * * /directory/and/command
+| | | | |
+| | | | +---- Day of the Week   (range: 0-7, 1 = Monday)
+| | | +------ Month of the Year (range: 1-12)
+| | +-------- Day of the Month  (range: 1-31)
+| +---------- Hour              (range: 0-23)
++------------ Minute            (range: 0-59)
+# Sunday is 0 or 7
+----
+
+** Some crons use an extended cron which has Y after day of the week in the range of 1900-3000
+
+** Resource: https://crontab.guru/
+
+** Edit your own cron file (/var/spool/cron/crontabs)
+
+----
+crontab -e 			# opens user crontab in text editor
+----
+
+** System cron entries (ls -d /etc/cron*)
+
+* Samba – suite of programs that allow interoperability with Windows Workgroups and Domains
+
+==== 6.5 Discuss orphaned and defunct processes
+* DISCUSSION: Difference between orphan and zombie
+** Orphan: parent process exited, adopted by /sbin/init (so it's PPID becomes 1)
+*** DEMO (see Appendix A)
+** Zombie: process has exited, waiting on parent to acknowledge
+*** Zombie can't be terminated with kill since it has already finished execution
+*** DEMO (see Appendix B)
+
+* Process States
+
+----
+D 	uninterruptible sleep (usually IO)
+R 	running or runnable (on run queue)
+S 	interruptible sleep (waiting for an event to complete)
+T 	stopped, either by a job control signal or because it is being traced
+W 	paging (not valid since the 2.6.xx kernel)
+X 	dead (should never be seen)
+Z 	defunct ("zombie") process, terminated but not reaped by its parent
+----
+
+** Additional characters may be displayed:
+
+----
+< 	high-priority (not nice to other users)
+N 	low-priority (nice to other users)
+L 	has pages locked into memory (for real-time and custom IO)
+s 	is a session leader
+l 	is multi-threaded (using CLONE_THREAD, like NPTL pthreads do)
++ 	is in the foreground process group
+----
+
+==== 6.6 Identify the purpose of apt/aptitude
+* DISCUSSION: installs programs from repository
+
+* Package management(Debian flavors)  Aptitude has a few other bells/whistles such as a text gui
+
+** Search and install packages
+
+----
+apt-cache search text
+apt-get install packagename
+----
+
+==== 6.7 Evalulate the validity of Linux processes
+* DISCUSSION: process information under /proc
+
+* Examine the validity of services
+
+** Recognize unusual names – difficult
+
+** Services/programs run from unusual directories
+
+----
+pwdx            # gets current working directory of process
+ls -l /proc/PID/cwd
+
+ps auxwwwe
+ps -ef                  # get PID with:
+
+ls -l /proc/PID/exe     # find the path and binary from where it was invoked
+----
+
+** Look at connection info and listening ports
+
+----
+netstat -anp  		# List all, don’t resolve port numbers, show program
+
+netstat -lnp		# Listening ports, don’t resolve port nums, show prog
+
+netstat -antp		# List all TCP, don’t resolve port nums, show prog
+
+netstat -lntp		# List listen TCP, don’t resolve port nums, show prog
+----
+
+** Find user/process making connection or listening on port
+
+----
+lsof -RPni :XX    # replace XX with port number
+
+lsof -Pnp PID     # List verbose process associated with the process
+----
+
+=== *SKILL 7: Develop shell scripts*
+==== 7.1 Demonstrate basic familiarity with shell scripting
+* DEMO: Basic shell scripting functions:
+* Positional arguments
+----
+#!/bin/bash
+printf "Hello, %s\n" "$1"  #call program with a name, it repeats as $1
+----
+
+* Command substitution
+----
+#!/bin/bash
+today=`date`     #old style with backticks
+echo $today
+
+#!/bin/bash
+today=$(date)    #new style
+echo $today
+----
+
+* Exit status
+----
+printf "%v\n"
+echo $?         #contains 0 if successful, else failed
+printf "##%d##\n", 123
+echo $?
+----
+
+* if statement
+----
+#!/bin/bash
+if (( 2 == 1 ))
+then
+    echo "Yep"
+else
+    echo "Nope"
+fi
+----
+
+* All on one line, note the semicolon placement
+
+----
+if (( 2 != 1 )); then echo "Yep"; else echo "Nope"; fi
+----
+
+----
+if [ -e file.name ]
+then
+	echo "file.name exists"
+else
+	echo "file.name doesn’t exist"
+fi
+----
+
+** Reference File Test Operators:  http://tldp.org/LDP/abs/html/fto.html
+
+* for
+----
+#!/bin/bash
+for var in {1..3}
+do
+    printf "%d\n" "$var"
+done
+----
+
+** May not perform like you think. Note junk between Z and a.
+
+----
+for var in {A..z}
+do
+	echo -n $var
+done
+echo
+----
+
+* What is the issue with this?  What about filenames with spaces?
+----
+echo a > "/tmp/name with spaces"
+for var in $(ls /tmp); do echo $var; done
+for var in /tmp/*; do echo $var; done
+----
+
+* while
+----
+#!/bin/bash
+n=1
+while [ $n -le 3 ]
+do
+    echo "$n"
+    n=$(( $n + 1 ))
+done
+----
+
+* Demonstration of using regex and BASH_REMATCH in Bash > V3
+** Call the below script as ./retest.sh aaabbbccc (a{1,3}) to show that the
+special variable BASH_REMATCH will contain the captured match
+
+----
+#!/bin/bash
+string=$1
+regex=$2
+[[ $string =~ $regex ]]
+echo "${BASH_REMATCH[1]}"
+----
+
+==== 7.2 Explain variables and variable manipulation
+.* DEMO: assigning variables with export
+----
+set                     #show local scope variables
+env                     #show global variables, note the difference and absence of BASH variables
+avar="first"            #set avar to "first"
+set | grep avar         #show that avar is in there
+env | grep avar         #show that avar is not in env
+export avar="second"    #set global avar
+echo $avar              #show that it now contains second
+env | grep avar         #show that it is now in global variables space as "second"
+set | grep avar         #show that the original local scope avar has been overwritten and is now also second
+avar="third"            #overwrite avar with local variable assignment
+env | grep avar         #show that avar is now third in global space
+----
+
+* Using braces around variable names, sometimes they are required.
+
+----
+var=ying
+echo $var	
+echo $varyang
+echo ${var}
+echo ${var}yang
+----
+
+.* DEMO: Linux Internal Variables<<1>>
+----
+echo $BASH              #Path to the BASH binary
+echo $BASHPID           #PID of current BASH shell
+echo $UID               #User ID, 0 for Root. ID comes from the passwd file
+echo $EUID              #Effective User ID.  ID that shell is currently running as, may be changed due to su or sudo. 0 indicates root privileges
+echo $PWD               #Present working directory
+----
+* More detailed list available at http://tldp.org/LDP/abs/html/internalvariables.html
+
+
+==== 7.3 Employ commands for string manipulation
+.* DEMO: String manipulation commands
+----
+# string tests
+[ "abc" == "abc" ]
+echo $?
+[ "abc" == "def" ]
+echo $?
+[ "abc" != "abc" ]
+echo $?
+export a=abc
+[ $a == "abc" ]
+echo $?
+echo -n $a | wc -c      #length of string $a with no newline
+----
+
+* Linux string-related commands
+
+----
+column -ts ':' /etc/passwd      # human readable
+expand /etc/fstab               # change tabs to spaces
+paste /etc/passwd /etc/shadow   # join regardless
+join -t ':' -j 1 /etc/passwd /etc/shadow    # join on common
+sort /etc/passwd or cat /etc/passwd | sort			
+uniq /etc/passwd or cat /etc/passwd | uniq
+head -n 5 /etc/passwd           # Display first 5 lines of file
+tail -n 10 /etc/passwd          # Display last ten lines of file
+tail -f /var/log/messages       # displays changes made to file
+tac /etc/passwd                 # reverse cat
+echo "desserts" | rev           # reverse string
+----
+
+** String manipulation
+
+----
+var=moscow
+echo ${var:2}           # Start at char 2, (0 is first)
+echo ${var:1:2}         # start char 0, number of chars 1
+echo ${var: -3:1}       # Note extra space. It is required.
+----
+
+*** Reference: http://tldp.org/LDP/abs/html/string-manipulation.html
+
+** Translate (tr)
+
+----
+cat /etc/passwd | tr ":" " "	# change all colons to spaces 
+cat /etc/passwd | tr \: \ 		# there is a space after the last slash
+cat /etc/passwd | tr -d \\n 	# delete newlines
+cat /etc/passwd | tr 'o' 'O' 	# replace characters
+----
+
+*** Reference: http://www.thegeekstuff.com/2012/12/linux-tr-command/
+
+** Extract columns in original order (cut)
+*** Easy to use, but not super powerful
+
+----
+cat /etc/passwd | cut -d : -f 3         # Retrieve third column in /etc/passwd
+cat /etc/passwd | cut -d : -f 3,4,7     # Retrieve third, fourth and seventh columns
+cat /etc/passwd | cut -d : -f 7,4,3     # How will these display the output?
+----
+
+** String Editor (sed)
+
+----
+cat /etc/passwd | sed 's/paris/london/g'    # g for Global -- all occurences
+
+cat /etc/fstab | sed 's/#.*//'              # Delete comments
+	
+cat /etc/fstab | sed '/^$/d'                # Delete empty lines
+grep -v ^$                                  # Also works
+----
+
+*** Reference: http://www.thegeekstuff.com/2009/09/unix-sed-tutorial-replace-text-inside-a-file-using-substitute-command/
+
+** String Manipulation Scripting (awk)
+*** Very powerful, simple for easy tasks, but can get complicated
+*** Is a complete scripting language
+
+----
+cat /etc/passwd | awk -F":" '{ print $3 "-" $4 "-" $7 }'
+cat /etc/passwd | awk -F":" '{ print $7 "-" $4 "-" $3 }'	
+
+awk -F":" '{ print "username: " $1 "\t\tuid:" $3 }' /etc/passwd
+----
+
+* Internal Field Separator (IFS)
+
+** It is used by the shell to determine how to do word splitting, i. e. how to recognize word boundaries.
+
+** DEMO: Changing the IFS
+
+----
+str="one:1,two:2,three:3"
+IFS=" "; for w in $str; do echo -n "**$w** "; done      # Default, just one value for $w
+IFS=","; for w in $str; do echo -n "**$w** "; done      # Correctly separates into 3 groups
+IFS=":"; for w in $str; do echo -n "**$w** "; done      # Strange separation into 4 groups
+----
+
+** DEMO:  Saves and restores the IFS
+
+----
+#!/bin/bash
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+for f in *
+do
+  echo "$f"
+done
+IFS=$SAVEIFS
+----
+
+==== 7.4 Identify hashing and file hashes
+* DISCUSSION: Popular hashes
+** md5 - 128 bit
+** sha1 - 160 bit
+** sha256 - 256 bit
+* DISCUSSION: Explain a hash collision
+* DEMO: Create hashes from files
+
+----
+echo "Here is some stuff" > file1
+sha1sum file1
+md5sum file1
+----
+
+* Small changes have a big impact on hash result
+
+----
+echo "Happiness is a Day of Sunshine" > happy
+md5sum happy
+echo "Happiness is a day of Sunshine" > happy
+md5sum happy
+----
+
+* Reference: http://www.mscs.dal.ca/~selinger/md5collision/
+
+==== 7.5 Create a bash script to perform basic enumeration on a Linux machine
+* Previously covered in shell basics
+
+* Sample scripts
+
+----
+#!/bin/bash
+# Read from file supplied as an argument on the command line
+
+linecount=0
+while read -r var
+do
+    linecount=$(expr $linecount + 1)
+    echo "$linecount value is $var"
+done < "$1"
+----
+
+----
+#!/bin/bash
+# Read from /etc/passwd and display only desired fields
+
+IFS=:
+linecount=0
+while read -r f1 f2 f3 f4 f5 f6 f7
+do
+	((linecount++))
+	# Print the desired fields in the desired way
+	echo Line $linecount: "Username: $f1, Shell: $f7: Home Dir: $f6"
+done < /etc/passwd
+----
+
+----
+#!/bin/bash
+# Read from file specified on command line ($1) word by word
+
+linecount=0
+for var in $(cat $1)
+do
+    linecount=$[$linecount + 1]
+    echo "$linecount value is $var"
+done
+----
+
+=== *SKILL 8: Identify Linux networking features*
+==== 8.1 Describe the local name resolution process on a Linux host
+* DISCUSS: Order of precedence for DNS resolution
+* DEMO: Show the following files and explain what they do:
+----
+/etc/hosts          # List of hosts and associated IP's
+/etc/resolv.conf    # Name Server Settings
+/etc/nsswitch.conf  # Determines lookup order
+
+----
+
+==== 8.2 Describe the difference between regular and raw sockets
+* DISCUSS: Characteristics and permission requirements of a RAW SOCKET
+* DISCUSS: When is a raw socket necessary (ie. nmap -sS)
+
+A Unix domain socket or IPC socket (inter-process communication socket) is a data communications endpoint for exchanging data between processes executing on the same host operating system.
+
+A network socket is an internal endpoint for sending or receiving data at a single node in a computer network. Concretely, it is an representation of this endpoint in the networking software (protocol stack), such as an entry in a table (listing communication protocol, destination, status, etc.), and is a form of system resource.
+
+## upload and insert image for OSI model layers
+image::https://git.cybbh.space/global-objects/resources/raw/master/images/cyber-branch-insignia-official.png[OSI Model Layers,width=128,float="left"]
+
+Typical network socket format (IP:Port): 1.2.3.4:25
+
+Non-raw socket – Protocol stack processes its respective layer, performing address, checksum (if applicable) validation, removes its respective header and trailer (if applicable) and passes up the contents to its immediate upper layer
+
+RAW socket – no layer checking done, it is up to the application using the raw socket to interpret the data. RAW sockets are often used as packet capture/sniffer programs as it captures the “raw” data from the network interface card and passes it directly to the application
+
+Bash with sockets ( http://hacktux.com/bash/socket )
+----
+# exec 3<>/dev/tcp/www.example.com/80 ; echo -e "GET / HTTP/1.1\r\nHost: www.example.com\r\nConnection: close\r\n\r\n" >&3 ; cat <&3
+HTTP/1.1 200 OK
+Cache-Control: max-age=604800
+Content-Type: text/html
+Date: Thu, 09 Mar 2017 21:53:14 GMT
+Etag: "359670651+gzip+ident"
+Expires: Thu, 16 Mar 2017 21:53:14 GMT
+Last-Modified: Fri, 09 Aug 2013 23:54:35 GMT
+Server: ECS (fty/2FA4)
+Vary: Accept-Encoding
+X-Cache: HIT
+Content-Length: 1270
+Connection: close
+
+<!doctype html>
+<html>
+<head>
+    <title>Example Domain</title>
+----
+
+==== 8.3 Identify basic network services for Linux
+* DEMO: show netstat, lsof, host, dig, nslookup
+----
+netstat -l
+sudo lsof -i
+host www.google.com         # Returns information about that host on Google's domain
+dig @8.8.8.8 www.google.com # Domain Internet Groper -Returns the A record using nameserver 8.8.8.8 for the Google domain
+dig axfr @nsztm1.digi.ninja zonetransfer.me #Performs a complete zonetransfer of zonetransfer.me
+
+nslookup www.google.com 8.8.8.8 # Non-interactive nslookup mode
+nslookup    #interactive mode 
+> server 8.8.8.8
+> www.google.com
+----
+
+Network Services – not all inclusive, just a list of some
+
+* ntpd – Network Time Protocol Daemon
+* httpd (apache) – Hyper Text Transfer Protocol Daemon
+* nginx – High-performance HTTP server, reverse proxy, and IMAP/POP3 proxy server
+* sshd – Secure SHell Daemon
+* postfix, sendmail – Mail Server Daemon
+* snmpd – Simple Network Management Protocol Daemon
+* iptables, nftables, ufw – Network Filtering Protocol Service
+* nfsd – Network File System Server Daemon
+* dnsmasq, nscd – Name Service Cache Daemon
+* named (bind)– Dynamic Naming Service Server Daemon
+* smbd (samba) –  Server Message Block Server Daemon
+
+Network Super Servers (inetd and xinetd)
+
+* Listen for network connection on behalf of another program
+
+* Hands off control of that connection to intended server
+
+* Help reduce memory load and improve security
+
+* There are two different super servers:
+**	inetd use TCP Wrappers to handle security
+**	xinetd has builtin security features
+
+*** Servers that normally use super server: telnet, FTP, TFTP, rlogin, finger, POP, IMAP
+
+xinetd security configuration enhancements
+----
+Listen to only on network interface for the service:
+	bind = <IP Address>
+Accept connections only from IP addresses:
+	only_from = <IP Addresses|Network>
+Deny connections only from IP addresses:
+	no_access = <IP Addresses|Network>
+Set times during which users may access the server:
+	access_times = hour:min-hour:min
+If access is prohibited, send optional banner to  client:
+	banner  = /usr/local/etc/deny_banner
+----
+
+# Example xinetd config file
+----
+service ftp
+{
+	socket_type	= stream
+	protocol	= tcp
+	wait		= no
+	user		= ftp
+	server		= /usr/sbin/in.ftpd
+	server_args = -i
+	disable		= no
+}
+
+Disable a service: change disable to yes
+To restart the xinetd service:
+	/etc/init.d/xinetd {restart|reload}
+----
+
+To run:
+	Conserves resources
+	Runs daemons only when needed
+	Provides an additional layer of security and can turn virtually any script or program into a service
+
+Not to run:
+	Another vulnerable service
+	Can secure services using other methods
+	Can be used to create a backdoor listener
+
+# xinitd backdoor
+----
+service print-srv
+{
+    disable       	= no
+    protocol   		= tcp
+    socket_type    	= stream
+    wait           	= no
+    user           	= root
+    server   		= /bin/bash
+    server_args   	= -i
+}
+
+xinetd reads this file and determines port from /etc/services
+----
+
+==== 8.4 Employ commands to gather network information
+* DISCUSSION: Relevant network data for network enumeration
+* DEMO: Show network related commands
+----
+ip
+netstat
+ifconfig
+arp
+route
+----
+
+==== 8.5 Enumerate active connections on a Linux machine
+* DISCUSSION: How to use telnet, nc, nmap to enumerate ports on a remote machine
+
+Enumerating systems/ports
+
+Netstat (http://www.binarytides.com/linux-netstat-command-examples/)
+
+Nmap (https://nmap.org/)
+
+nmap -sV -p T:80 --script=banner www.gentoo.org
+
+Starting Nmap 7.40 ( https://nmap.org ) at 2017-02-05 13:49 EST
+Nmap scan report for www.gentoo.org (89.16.167.134)
+Host is up (0.093s latency).
+Other addresses for www.gentoo.org (not scanned): 2001:41c8:0:936::139 2001:41c8:0:936::136
+PORT   STATE SERVICE VERSION
+80/tcp open  http    nginx
+|_http-server-header: nginx
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 17.50 seconds
+
+# Scanning with netcat
+## scan 1 to 1023 ports on system vip-1.vsnl.nixcraft.in ##
+nc -zv vip-1.vsnl.nixcraft.in 1-1023
+
+Analyzer/enumerating active connections (https://help.joyent.com/hc/en-us/articles/226687427-Watching-active-IP-connections-Linux)
+
+watch -d -n1 lsof -i
+
+Socket Statistics
+http://www.binarytides.com/linux-ss-command/
+
+ss -nap
+ss -lntp
+
+
+==== 8.6 Describe the advantages and disadvantages of Samba
+* DISCUSSION: What is Samba
+** Allows Windows file and printer sharing on Linux
+* Advantages: free, uses CIFS
+* Disadvantages: more overhead to configure
+* A little challenging to get to work correctly for certain situations
+
+Samba config file:
+----
+/etc/samba/smb.conf
+
+Shares the /home/stuff directory as share.  Windows systems will see it as “share”, guest can access it, and nobody can write to it.
+
+[share]
+   comment = Shared Directory
+   path = /home/stuff
+   guest ok = yes
+   writable = no
+----
+
+==== 8.7 Explain the functionality of telnet
+* DISCUSSION: telnet features: basic authentication, plaintext
+
+Program/protocol that allows remote console connectivity;  Clear text protocol, uses port 23 by default.
+
+Can’t transfer a file natively, so why would you want to do this?  Sometimes the only access you have to a remote system is a standard terminal.
+
+If you can, use ssh instead.
+
+Netcat can transfer a file too!
+
+
+==== 8.8 Perform a file transfer using telnet
+* DISCUSSION: transfer a file using telnet
+
+Transfer a file with telnet demo
+----
+uuencode, copy and paste into an echo command piped to an executable, uudecode
+----
+* DISCUSSION: Other methods of file transfer, nc, scp, ftp, tftp
+
+==== 8.9 Analyze network connections using Linux command line tools
+* Repeat of 8.4
+{empty} +
+
+==== Appendix A: Orphan Process Demo
+* orphan.c (please compile in advance)
+
+----
+// gcc -std=c99 orphan.c -o ./orphan
+// ./orphan
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+ 
+int main(int argc, char **argv)
+{
+    // Create a child process      
+    int pid = fork();
+ 
+    if (pid > 0) 
+    {
+        sleep(5);
+        printf("in parent process\n");
+    }
+ 
+    // Note that pid is 0 in child process
+    // and negative if fork() fails
+    else if (pid == 0)
+    {
+        sleep(60);
+        printf("in child process\n");
+        printf("My parent's ID: %d\n", getppid());
+    }
+ 
+    return 0;
+}
+----
+
+* orphan.sh (run in class)
+
+----
+#!/bin/bash
+
+echo "Demonstrating orphan process..."
+echo =================================
+./orphan &
+ps -elf | head -n 1
+for i in $(seq 1 13)
+do
+  ps -elf | grep orphan | grep -v grep | grep -v bash
+  sleep 5
+done
+----
+
+==== Appendix B: Zombie Process Demo
+
+* zombie.c (please compile in advance)
+
+----
+// Child becomes Zombie as parent is sleeping
+// when child process exits.
+
+// gcc -std=c99 zombie.c -o ./zombie
+// ./zombie
+
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int main()
+{
+    // Fork returns process id
+    // in parent process
+    pid_t child_pid = fork();
+ 
+    // Parent process
+    if (child_pid > 0)
+    {
+        sleep(10);
+    }
+    else // Child process
+    {
+        sleep(2);
+        exit(0);
+    }
+    
+    return 0;
+}
+----
+
+* zombie.sh (run in class)
+
+----
+#!/bin/bash
+
+echo "Demonstrating zombie process..."
+echo =================================
+./zombie &
+ps -elf | head -n 1
+for i in $(seq 1 $((20 / 5)) )
+do
+  ps -elf | grep zombie | grep -v grep | grep -v bash
+  sleep 5
+done
+----
+
+ifdef::backend-docbook[]
+[index]
+Example Index
+////////////////////////////////////////////////////////////////
+The index is normally left completely empty, it's contents being
+generated automatically by the DocBook toolchain.
+////////////////////////////////////////////////////////////////
+endif::backend-docbook[]
+
+[bibliography]
+==== References
+- [[[1]]] 9.1. Internal Variables. (n.d.). Retrieved August 03, 2017, from http://tldp.org/LDP/abs/html/internalvariables.html

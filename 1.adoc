@@ -1,0 +1,1029 @@
+:doctype: book
+:styledir: /home/gitlab-runner/builds/119e33fe/0/CCTC/internal/
+:stylesheet: {styledir}cctc.css
+//file path above may change depending on the location
+
+[.noborder,cols="2,5"]
+|===
+a|image::https://git.cybbh.space/global-objects/resources/raw/master/images/cyber-branch-insignia-official.png[Cyber,width=256,float="left"]
+a|= Linux Facilitation Guide
+|===
+
+'''
+U.S. Army Cyber School
+2017
+
+:numbered!:
+ 
+= Linux Section 1: Core Features
+
+{empty} +
+
+== Skills and Objectives
+
+{empty} +
+
+.*SKILL 1: Identify common shells*
+** 1.1 Describe common shells and their differences
+** 1.2 Define common shell modes, features and functions
+
+.*SKILL 2: Employ commands using common shells*
+** 2.1 Demonstrate basic familiarity with the command line interface
+** 2.2 Describe environment initialization and implications
+** 2.3 Demonstrate appropriate use of pipes and redirection
+** 2.4 Explain the fundamentals of Boolean logic
+** 2.5 Identify methods of gaining more information about commands and switches
+
+.*SKILL 3: Analyze the Linux file system*
+** 3.1 Describe file system hierarchy
+** 3.2 Describe file system ownership properties
+** 3.3 Discuss file system permissions
+** 3.4 Discuss file system timestamps
+** 3.5 Discuss file system attributes
+** 3.6 Employ commands to search the file system
+** 3.7 Describe regular expressions
+** 3.8 Create regular expressions to find data within in the file system
+** 3.9 Identify the information that a regular expression will return 
+
+{empty} +
+
+== Practical Exercises
+
+Each practical exercise is further detailed on Blackboard, to include scenarios, grading, and submission standards.
+
+==== Activity: File Permissions and ACLs (Previously: PRIVWars)
+
+==== Activity: Magic file
+
+==== Activity: Key User and Group Files (Previously: SHADOWKen)
+
+==== Activity: Regular Expressions 1
+
+==== Activity: Regular Expressions 2
+
+==== Exercise: Parse HTML
+
+
+{empty} +
+
+== Faciliation:
+
+==== Facilitation 1-3
+
+=== SKILL 1: Identify common shells
+==== 1.1 Describe common shells and their differences
+_What is a shell?_ - The most generic sense of the term shell means any program that users employ to type commands. A Unix shell is a command-line interpreter or shell that provides a traditional Unix-like command line user interface. A shell hides the details of the underlying operating system and manages the technical details of the operating system kernel interface, which is the lowest-level, or "inner-most" component of most operating systems. <<1>>
+
+|===
+a|image::../../facilitation-guides/resources/images/linux_1_1.gif[Shell History,width=600,float="left"]
+|===
+
+.*/bin/sh*
+* Bourne shell, created by Stephen Bourne at Bell Labs in 1979.
+* First widely popular (not first shell) distributed with Unix systems
+* Often linked to /bin/bash or /bin/dash
+
+.*/bin/csh*
+* Berkeley Software Distribution (BSD) Unix systems in 1978
+* Created by Bill Joy as a student at UC Berkeley
+* Uses syntax similar to C language, which was the dominant language at the time
+
+.*/bin/tcsh*
+* Fixed many of the bugs in csh and added numerous new features
+* programmable command line completion & editing
+
+.*/bin/bash*
+* Created by the coming of the GNU project, aimed at building a POSIX compliant Unix-like system out of free software
+* Officially released in 1988, writen by Brian Fox
+* Most widely distributed Linux shell
+
+.*/bin/dash*
+* DASH (Debian Almquist shell), modern POSIX-compliant implementation of /bin/sh
+
+.*/bin/ksh*
+* Korn Shell. Backwards compatible with the Bourne Shell but includes some features of the  C Shell
+
+.*/bin/zsh*
+* Described as extended Bourne shell with features of bash, ksh, and tcsh
+
+.*Differences between Shells*<<2>>
+[cols="60,10,10,10,10" options=header]
+|====
+|Feature |	sh 	|csh |	bash| 	tcsh
+|Job Control: the jobs command| 	No| 	Yes| 	Yes| 	Yes
+|Aliasing: renaming complex commands with simple names| 	No| 	Yes| 	Yes| 	Yes
+|Command History: re-execute frequently used commands quickly| 	No| 	Yes| 	Yes| 	Yes
+|Command line editing: correct a mis-spelled command name in a complicated command by using the arrow keys and backspace| 	No| 	No| 	Yes| 	Yes
+|Filename Completion: complete long filenames with a single keystroke| 	No| 	Yes| 	Yes| 	Yes
+|List Variables: the shell has a built-in list data type, useful when scripting| 	No| 	Yes| 	No| 	Yes
+|Fully programmable completion: complete command names, hostnames, usernames, etc. with a single keystroke| 	No| 	No| 	No| 	Yes
+|Can follow symbolic links invisibly| 	No| 	No| 	Yes| 	No
+|Custom Prompt (easily): for example, change the prompt to display the current working directory| 	No| 	No| 	Yes| 	Yes
+|Underlying syntax (when writing scripts)| 	sh| 	csh| 	sh| 	csh
+|Can cope with large argument lists| 	Yes| 	No| 	Yes| 	Yes
+|Freely available: download the shell and possibly the source code, for free!| 	No| 	No| 	Yes| 	Yes
+|====
+
+{empty} +
+*Example of shell code differences between bash and tcsh*
+
+ #!/bin/bash
+ count=1
+ for filename in $(ls /var/log)
+ do
+    echo "File $((count++)) is $filename"
+ done
+
+ #!/bin/tcsh
+ set count=1
+ foreach filename (`ls /var/log`)
+    echo "File $count is $filename"
+    @ count++
+ end
+
+==== 1.2 Define common shell modes, features and functions
+
+.*Bash – modes*
+* $ - normal user prompt
+* # - root prompt
+* When bash is invoked with the name sh (old Bourne shell name), it will do its best to act like the original Bourne shell
+* --posix – (posix mode) changes bash behavior to be POSIX compliant (information in bash man page)
+
+.*Bash - features*
+
+* Aliases
+----
+>alias ll=‘ls -l’
+----
+
+* Bash Math
+** Regular operators: + - * / %
+----
+>echo $((4+5))
+9
+>a=3; b=5; echo $a + $b
+3 + 5
+>a=3; b=5; echo "$(($a + $b))"
+8
+----
+** Increment, decrement (pre versus post)
+----
+>a=5; echo $((a++)) $a
+5 6
+>a=5; echo $((++a)) $a
+6 6
+>a=5; echo $((a--)) $a
+5 4
+>a=5; echo $((--a)) $a
+4 4
+----
+** Shift operators: << >>
+----
+>echo $((32<<2))
+128
+>echo $((32>>2))
+8
+----
+** Pop Quiz
+----
+myvar=1
+yourvar=3
+((myvar = myvar + 1))
+((myvar++))
+((myvar = myvar * yourvar))
+((myvar--))
+((myvar>>=3))
+echo $myvar
+----
+What is myvar?
+	
+https://www.gnu.org/software/bash/manual/html_node/Shell-Arithmetic.html#Shell-Arithmetic
+
+* Functions (three equivalent expression forms)
+----
+>addone () { echo $(($1 + 1)); }
+>addone 2
+3
+
+>addtwo () { echo $[$1 + 2]; }
+>addtwo 5
+7
+
+>addthree () { echo $(expr $1 + 3); }
+>addthree 10
+13
+----
+
+* Tab completion
+
+* Parameter Expansion
+----
+>echo {a..e}
+a b c d e
+
+>for num in {1..4}; do echo $num; done
+1
+2
+3
+4
+----
+
+Note that Linux is very different from Windows with wildcard (*) expanstion.
+Linux expands the wildcard _before_ handing it off to the application.
+In Windows, each application must deal with the wildcard itself.
+
+This matters in some cases. The first 'ls' does not find all the matching files.
+----
+>ls -lR /etc/pass*
+-rw-r--r-- 1 root root 1231 Jun 22 07:35 /etc/passwd
+-rw------- 1 root root 1201 Jun  6 12:01 /etc/passwd-
+
+>find /etc -name "pass*" 2>/dev/null
+./cron.daily/passwd
+./init/passwd.conf
+./pam.d/passwd
+./passwd
+./passwd-
+
+>find /etc -name "pass*" -exec ls -l {} \; 2>/dev/null
+-rwxr-xr-x 1 root root 249 Feb 16  2014 /etc/cron.daily/passwd
+-rw-r--r-- 1 root root 534 Feb 16  2014 /etc/init/passwd.conf
+-rw-r--r-- 1 root root 92 Feb 16  2014 /etc/pam.d/passwd
+-rw-r--r-- 1 root root 1231 Jun 22 07:35 /etc/passwd
+-rw------- 1 root root 1201 Jun  6 12:01 /etc/passwd-
+----
+
+* History
+** File is $HISTFILE (typically ~/.bash_history)
+** Change size by modifying:
+*** $HISTSIZE – max lines in history
+*** $HISTFILESIZE – max lines saved (saved when logging out), set to 0 for no history
+
+----
+>echo $HISTFILE
+/home/username/.bash_history
+
+>echo $HISTFILESIZE
+2000
+
+>echo $HISTSIZE
+1000
+----
+
+* Interpreter/scripting
+
+* Job Control
+
+.*emacs vs vi mode:*
+[source, shell]
+----
+set --help              #display all the help functionality of set command - shell options
+set -o                  #show that emacs is on by default, vi is off
+----
+
+
+
+=== SKILL 2: Employ commands using common shells
+==== 2.1 Demonstrate basic familiarity with the command line interface
+.*DISCUSSION: What is Situational Awareness on a Linux System?*
+* Command Order of Evaluation in Bash
+
+It is important to understand when typing a command in the bash shell, how it
+is evaluated and potentially executed. For example, an alias or fuction with
+the same name of the intended command is evaluated before the command is parsed
+and executed from the PATH. Because of this, it is possible to decieve the user
+into executing commands other than the intended command.
+
+REDIRECTION is attempted first +
+ALIASES +
+Parameter expansion, command substitution, arithmetic expansion, and quote removal before being assigned to the variable +
+Shell FUNCTION +
+BUILTIN command +
+HASH table +
+PATH variable ($PATH) +
+If the above fails the the user receives the message “command not found” +
+
+* Commands to Evaluate Bash Order of Evaluation
++
+.*type*
+----
+type {command}     #evaluates bash order of evaluation to determine the first instance of the command
+type -a {command}  #shows all instances of command in the order of bash evaluation
+----
++
+.*hash*
+----
+hash               #displays bash's hash table
+hash -r            #clear (reset) bash's hash table
+----
++
+.*which*
+----
+which {command}    #evaluates the PATH in order and displays the first instance of the command if it exists
+which -a {command} #evaluates the PATH in order and displays all instances of the command if it exists 
+----
++
+* General Commands
++
+.*w*
+----
+w               #users logged on and what they are doing, uptime
+----
++
+.*man*
+----
+man             #manual help pages
+----
++
+.*find*
+----
+find --help     #file location
+----
++
+.*echo*
+----
+echo            #display a line of text on standard output
+----
++
+.*ls*
+----
+ls              #list directory contents
+----
++
+.*cat*
+----
+cat             #concatenates files and print on standard output
+----
+* What is running on the system
+** Processes
++
+--
+.*ps*
+[source, shell]
+----
+ps --help                   #view processes help
+ps -ef                      #view processes
+----
+
+.*top*
+[source, shell]
+----
+top                         #view updating process monitor, note that it shows memory usage
+free                        #another method of showing memory usage
+----
+--
+** Services
++
+2 Main boot systems on Linux: SysV and systemd (there was upstart for a while, but it is mostly gone in favor of systemd)
+
+- SysV
+. inittab to check runlevel
+. init.d scripts loaded out of RC# folders
+
+- systemd
+. services set to run at startup
+. systemctl --help
+
+** Scheduled Tasks
++
+- cron - file per user located under /var/spool/cron/{username}
+- crontab - system wide cron file /etc/crontab
+- /etc/cron.{time} folders - pre-populated cronjobs to run scripts under folders (hourly, daily, weekly, monthly)
+- at - one time scheduled job (atq to view)
++
+
+* Users on the system?
+** Accounts
++
+/etc/passwd
++
+** Groups
++
+/etc/group
++
+
+* Networking
+** System networking settings
+** Local Subnet
+** Active network connections
+** Routing
+** Firewall settings
+* Logging and auditing
+
+
+==== 2.2 Describe environment initialization and implications <<3>>
+|===
+a|image::../../resources/images/linux_1_2.png[Bash Init Order,width=800,float="left"]
+|===
+* Login vs Non-login shell:
+** login: First process spawned by /bin/login out of /etc/passwd file to execute under users id
+*** typically represented in ps with '-' character
+*** shell gained from text console, SSH, su -
+*** Is not created during GUI login, you get a session manager or windows manager (ie, gdm3)
+** non-login shell:
+*** shell invoked from another shell
+* Interactive vs Non-Interactive
+** Interactive: reads commands from user input on a tty ($PS1 prompt variable is set)
+** Non-Interactive: Shells running scripts, can run in background
+
+==== 2.3 Demonstrate appropriate use of pipes and redirection
+.*Standard Streams*
+* STDIN: Standard input
+** Input into a program, file descriptor 0
+** Represented as 0< or < when redirecting standard input from a file
+* STDOUT: Standard output
+** Output of a program, file descriptor 1
+** Represented as 1> or > when redirecting standard output to a file
+* STDERR: Standard error
+** Output of a programs error handler
+** Represented as 2> when redirecting standard error to a file
+* Use >> or 2>> to append rather than overwrite when redirecting
+* Use 2>&1 when merging standard error into standard output
+
+.*Pipes*
+* Redirect output of one command to input of another command
+* Unnamed pipe: |
+** Uni-directional
+** Opened at time of creation
+* Named pipe / FIFO
+** Created with mkfifo command or mknod p command
+** Exist on filesystem with a name
+** Can be accessed by unrelated processes
+** bi-directional
+
+.*DEMO: Named Pipe*
+[source, bash]
+----
+#Terminal 1
+cd /tmp
+mkfifo inpipe
+ls -la              #note inpipe shows up in the listing with a p
+echo "All your base are belong to us" > inpipe &
+jobs
+
+#Terminal 2
+cat < inpipe
+----
+
+* Also "mknod name p"
+
+----
+mknod pip p
+cat < pip | tee pip
+----
+
+==== 2.4 Explain the fundamentals of Boolean logic
+*DEMO: Create Truth Table*
+[options=header]
+|====
+|A | B | AND | OR | XOR | NOT A 
+|True|True|True|True|False|False
+|True|False|False|True|True|
+|False|True|False|True|True|True
+|False|False|False|False|False|
+|====
+
+.*DEMO: Boolean in a shell*
+** background operator
+----
+ping 127.0.0.1 &            #notice ping continues
+----
+
+* semi-colon
+** Executes next command unconditionally
+----
+ping -c4 127.0.0.1 ; echo "All done"   #4 pings followed by the message 'All done'
+----
+
+* AND Operator (&&)
+** Executes next command only if the previous command succeeds
+----
+cd /tmp && ls && echo "It works"            #cd to /tmp and run ls if successful
+cd /fakedir && ls && echo "It works"        # attempt to cd to fake dir, nothing runs after
+----
+
+* OR Operator (||)
+** Executes next command only if previous command fails
+----
+cd /tmp/fakedir || mkdir /tmp/fakedir       #first attempt creates, run again and it cd's
+----
+
+* NOT Operator (!)
+** Inverts the logical value of the item
+----
+cd /tmp/fakedir
+touch file1.txt file2.doc file3.pdf
+ls *.pdf
+ls !(*.pdf)
+----
+
+==== 2.5 Identify methods of gaining more information about commands and switches
+** Manual for a command, automatically paged using 'more'
+----
+>man signal
+>man -s 7 signal
+----
+
+** Find man pages using a keyword (two techniques)
+----
+>man -k ftp
+>apropos ftp
+ftp (1)              - Internet file transfer program
+netrc (5)            - user configuration for ftp
+sftp (1)             - secure file transfer program
+sftp-server (8)      - SFTP server subsystem
+(etc.)
+----
+
+** Find help, internal to the command (sometimes -h)
+----
+>ls --help
+----
+
+** Find a command
+----
+>which ls    #view filepath
+/bin/ls
+
+>whereis ls  #view filepath, finds all instances
+ls: /bin/ls /usr/share/man/man1/ls.1.gz
+----
+
+** Find information about a file
+----
+>file /bin/ls
+/bin/ls: ELF 64-bit LSB  executable, ...
+----
+
+
+=== SKILL 3: Analyze the Linux file system
+==== 3.1 Describe file system hierarchy
+Most Linux distrubutions follow the Filesystem Hierarchy Standard (FHS)
+http://refspecs.linuxfoundation.org/FHS_3.0/fhs-3.0.html
+
+image::https://git.cybbh.space/global-objects/resources/raw/master/file/facilitation-guides/linux/images/linux-filesystem.png[Linux File System,width=950,float="left"]
+
+* file system types:
+* ext3/4 - hard drive partitioning format
+* tmpfs - temporary file storage
+** Appears as a mounted volume, but is actually stored in volatile memory
+** /var/run on older distributions, /run on new
+* sysfs
+** Pseudo file system providing information about kernel, hardware, device drivers
+** Designed to add structure to the old procfs systems
+
+.*mount - mount a filesystem*
+----
+mount -t type device dir
+umount
+----
+
+.*df - Report file system disk space usage*
+----
+df -T
+----
+
+.*File System (main)*
+----
+/ - root
+/bin – main user binaries
+/sbin – main system binaries
+/usr – progams, libraries, docs
+/usr/bin – additional user binaries
+/usr/sbin – additional system binaries
+/lib – main libraries
+/lib/modules – kernel modules
+/usr/lib – additional libraries
+/dev – files used to access devices
+/etc – configuration files
+/var – dynamic files (logs, package installs, etc)
+/proc – pseudo file system for processes
+/sys – pseudo file system for resources/hardware
+/tmp – temp files clean on reboot
+/opt – third party software
+/mnt – mount point(s)
+/root – root home directory
+/home – user home directories
+lost+found – files/directories that can’t be recovered
+----
+
+==== 3.2 Describe file system ownership properties
+.*File Ownership*
+* Each file object has an owner and a group
+----
+ls -la          #show owner:group
+chown           #change owner
+chgrp           #change group
+chmod owner:group file
+getent          #get entries from Name Service Switch libraries
+----
+
+----
+user@host /etc $ ls -l passwd
+-rw-r--r-- 1 root root 2246 Feb  8 10:57 passwd
+              ^    ^
+            User  Group
+----
+
+.*File Properties*
+----
+- – regular file
+d – directory
+l – link
+b – block special file
+c – character special file
+s – socket
+p – named pipe (mknod, mkfifo)
+----
+
+* Extended permissions, especially +a (append-only) and +i (immutable)
+
+----
+chattr          # change extended permissions
+lsattr          # list extended permissions
+man chattr      # See ATTRIBUTES
+----
+
+==== 3.3 Discuss file system permissions
+.*File Permissions*
+* Each file has 12 bits describing its permissions
++
+|===
+a|image::../../resources/images/linux_1_3.png[File Attributes,width=600,float="left"]
+|===
+
+.*Two methods for using chmod*
+----
+touch somefile
+ls -la
+chmod 777 somefile
+ls -la
+chmod o-x somefile
+ls -la
+chmod -x somefile
+ls -la
+----
+
+.*setuid and setgid bits*
+* When these bits are set, the file will execute with under the context of owning user/group
+
+* SUID, program set with SUID runs under the security context of the user (owner) of the program
+
+* SGID, program set with SGID runs under the security context of the group of the program
+
+* Sticky, when set on a directory only the owner of the file can delete or rename files in that directory
+
+*DISCUSS: Why are setuid and setgid dangerous?*
+
+.*DEMO: Find special bits*
+----
+find / -user root -perm 4000 -print 2>/dev/null
+----
+
+==== 3.4 Discuss file system timestamps
+Available timestamps in Linux depend on the underlying format of the disk.
+
+.*EXT3*
+* mtime: modified time - time file was last modified
+* atime: access time - time file was last accessed
+* ctime: change time - time of inode record change
+
+.EXT4*
+* crtime: creation time
+
+.*DEMO: EXT4 crtime*
+----
+ls -i somefile          #get inode for file
+stat somefile           #view mac, inode, and other metadata about the file
+debugfs -R 'stat <{inode#}>' /dev/sda1      #view inode field contents
+istat /dev/sda1 {inode#}
+----
+
+.*Activities on a File*
+* This chart pertains to the inode record for the file
+[options=header]
+|====
+|FILE  |rename|local move|volume move|copy|access|modify|create|delete|perms
+|mtime |      |          |     x     |    |      |  x   |   x  |  x   |
+|atime |      |          |           |    |  x   |      |   x  |  x   |
+|ctime |  x   |    x     |     x     |    |      |  x   |   x  |  x   |  x
+|crtime|      |          |  dtime    |    |      |      |   x  |dtime |
+|====
+* on deletion an inode record will have a dtime added to the record to show when it was deleted
+* on volume move, a new inode record is created on the new volume, mtime and atime are copied to new inode.  On old inode, mtime and ctime are updated, dtime is added.
+
+
+.*Activities on Files in a DIR*
+[options=header]
+|====
+|DIR   |rename|local move|volume move|copy|access|modify|create|delete
+|mtime |      |     x    |           | x  |      |      |   x  |
+|atime |      |     x    |           |    |      |  x   |      |
+|ctime |      |     x    |           | x  |      |      |   x  |
+|crtime|      |          |           |    |      |      |      |
+|====
+
+.*DEMO: File and folder attributes*
+----
+#Setup 3 terminals, in 2 and 3, one looks at folder inode, other at file inode
+#Recheck istat after each command
+istat /dev/sda1 {inode}
+
+#Terminal 1
+cd /tmp
+mkdir test1
+stat test1
+cd test1
+touch file1
+stat file1
+echo "Some text" > file1
+cat file1
+cp file1 file2              #note that timestamps on file2 are for a created file
+mv file1 file3
+stat file3                  #show that inode hasn't changed
+cd ..
+mkdir test2
+mv test1/file3 test2/file3
+mv test2/file3 /run/file3
+stat /run/file3             #note new inode, atime change
+debugfs -R 'stat <inode#>' /dev/vda1    #note old inode record has updated mtime, ctime, now has dtime
+chmod +x /run/file3     
+----
+
+==== 3.5 Discuss file system attributes
+
+https://en.wikipedia.org/wiki/Chattr
+
+==== 3.6 Employ commands to search the file system
+
+.*find*
+----
+find --help
+----
+
+.*locate*
+----
+locate --help
+----
+
+==== 3.7 Describe regular expressions
+"Regular expressions are specially encoded text strings used as patterns for matching sets of strings."<<4>>
+
+http://regex101.com
+
+.*DEMO: Show off some basic regex, discuss wildcards*
+
+==== 3.8 Create regular expressions to find data within in the file system
+
+.*grep*
+----
+grep --h        #show different grep regex uses
+----
+
+.*find*
+----
+find --help
+find . -regextype sed -regex "{some regex}"
+----
+
+.*locate*
+----
+locate -regex "{some regex}"
+----
+
+.*Sample text file (presidents.csv)*
+----
+President,State,Born,Died
+George Washington,Virginia,02/22/1732,12/14/1799
+John Adams,Massachusetts,10/30/1735,07/04/1826
+Thomas Jefferson,Virginia,04/13/1743,07/04/1826
+James Madison,Virginia,03/16/1751,06/28/1836
+James Monroe,Virginia,04/28/1758,07/04/1851
+John Quincy Adams,Massachusetts,07/11/1767,02/23/1848
+Andrew Jackson,Tennessee,03/15/1767,06/08/1845
+Martin Van Buren,New York,12/05/1782,07/24/1862
+William Henry Harrison,Ohio,02/09/1773,04/04/1841
+John Tyler,Virginia,03/29/1790,01/18/1862
+James K. Polk,Tennessee,11/02/1795,06/15/1849
+Zachary Taylor,Louisiana,11/24/1784,07/09/1850
+Millard Fillmore,New York,01/07/1800,03/08/1874
+Franklin Pierce,New Hampshire,11/23/1804,10/08/1869
+James Buchanan,Pennsylvania,04/23/1791,06/01/1868
+Abraham Lincoln,Illinois,02/12/1809,04/15/1865
+Andrew Johnson,Tennessee,12/29/1808,07/31/1875
+Ulysses S. Grant,Illinois,04/27/1822,07/23/1885
+Rutherford B. Hayes,Ohio,10/04/1822,01/17/1893
+James A. Garfield,Ohio,11/19/1831,09/19/1881
+Chester A. Arthur,New York,10/05/1830,11/18/1886
+Grover Cleveland,New York,03/18/1837,06/24/1908
+Benjamin Harrison,Indiana,08/20/1833,03/13/1901
+William McKinley,Ohio,01/29/1843,09/14/1901
+Theodore Roosevelt,New York,10/27/1858,01/16/1919
+William Howard Taft,Ohio,09/15/1857,03/08/1930
+Woodrow Wilson,New Jersey,12/28/1856,02/03/1924
+Warren G. Harding,Ohio,11/02/1865,08/02/1923
+Calvin Coolidge,Massachusetts,07/04/1872,01/05/1933
+Herbert Hoover,California,08/10/1874,10/20/1964
+Franklin D. Roosevelt,New York,01/30/1882,04/12/1945
+Harry S. Truman,Missouri,05/08/1884,12/26/1972
+Dwight D. Eisenhower,Kansas,10/14/1890,03/28/1969
+John F. Kennedy,Massachusetts,05/29/1917,11/22/1963
+Lyndon B. Johnson,Texas,08/27/1908,01/22/1973
+Richard Nixon,California,01/09/1913,04/22/1994
+Gerald Ford,Michigan,07/14/1913,12/26/2006
+Jimmy Carter,Georgia,10/01/1924,
+Ronald Reagan,California,02/06/1911,06/05/2004
+George H. W. Bush,Texas,06/12/1924,
+Bill Clinton,Arkansas,08/19/1946,
+George W. Bush,Texas,08/04/1961,
+Barack Obama,Illinois,08/04/1961,
+Donald J. Trump,New York,06/14/1946,
+----
+
+.*grep examples*
+----
+# -n shows line numbers that match
+>grep -n John presidents.csv
+3:John Adams,Massachusetts,10/30/1735,07/04/1826
+7:John Quincy Adams,Massachusetts,07/11/1767,02/23/1848
+11:John Tyler,Virginia,03/29/1790,01/18/1862
+18:Andrew Johnson,Tennessee,12/29/1808,07/31/1875
+35:John F. Kennedy,Massachusetts,05/29/1917,11/22/1963
+36:Lyndon B. Johnson,Texas,08/27/1908,01/22/1973
+
+# ^ means beginning of line
+>grep ^John presidents.csv
+John Adams,Massachusetts,10/30/1735,07/04/1826
+John Quincy Adams,Massachusetts,07/11/1767,02/23/1848
+John Tyler,Virginia,03/29/1790,01/18/1862
+John F. Kennedy,Massachusetts,05/29/1917,11/22/1963
+
+# . means any character, * means zero or more of the previous pattern
+>grep John.*Mass presidents.csv
+John Adams,Massachusetts,10/30/1735,07/04/1826
+John Quincy Adams,Massachusetts,07/11/1767,02/23/1848
+John F. Kennedy,Massachusetts,05/29/1917,11/22/1963
+
+# $ is end of line
+>grep ",$" presidents.csv
+Jimmy Carter,Georgia,10/01/1924,
+George H. W. Bush,Texas,06/12/1924,
+Bill Clinton,Arkansas,08/19/1946,
+George W. Bush,Texas,08/04/1961,
+Barack Obama,Illinois,08/04/1961,
+Donald J. Trump,New York,06/14/1946,
+
+# Find only the selected expressions
+>egrep -o '(William|Ohio)' presidents.csv
+William
+Ohio
+Ohio
+Ohio
+William
+Ohio
+William
+Ohio
+Ohio
+
+# Count lines that match. grep -E is preferred over egrep
+>grep -E -c '(William|Ohio)' presidents.csv
+6
+
+# Does not produce the expected result of 9
+>grep -E -o -c '(William|Ohio)' presidents.csv
+6
+
+# First 3 years, any place in the file
+>grep -E -o "[0-9]{4}" presidents.csv | sort -u | head -n 3
+1732
+1735
+1743
+
+# Last 3 years, any place in the file
+>grep -E -o "[0-9]{4}" presidents.csv | sort -u | tail -n 3
+1994
+2004
+2006
+----
+
+.*sed examples*
+----
+# ascii character ranges. Can use / instead of +
+>sed 's+[0-9]+X+' presidents.csv | grep William
+William Henry Harrison,Ohio,X2/09/1773,04/04/1841
+William McKinley,Ohio,X1/29/1843,09/14/1901
+William Howard Taft,Ohio,X9/15/1857,03/08/1930
+
+# "g" for global
+>sed 's+[0-9]+X+g' presidents.csv | grep William
+William Henry Harrison,Ohio,XX/XX/XXXX,XX/XX/XXXX
+William McKinley,Ohio,XX/XX/XXXX,XX/XX/XXXX
+William Howard Taft,Ohio,XX/XX/XXXX,XX/XX/XXXX
+
+# Note list of characters
+>sed -r 's+[01][0123456789]{3}+XXXX+g' presidents.csv | grep William
+William Henry Harrison,Ohio,02/09/XXXX,04/04/XXXX
+William McKinley,Ohio,01/29/XXXX,09/14/XXXX
+William Howard Taft,Ohio,09/15/XXXX,03/08/XXXX
+
+# [[:digit:]] notation is available with -r
+>sed -r 's+[[:digit:]]{4}+XXXX+' presidents.csv | grep William
+William Henry Harrison,Ohio,02/09/XXXX,04/04/1841
+William McKinley,Ohio,01/29/XXXX,09/14/1901
+William Howard Taft,Ohio,09/15/XXXX,03/08/1930
+
+# Note () to group and \ to find what actually matched a group
+>sed -r 's+[0-9]{2}/[0-9]{2}/[0-9]{4}+XXXX-XX-XX+g' presidents.csv | grep William
+William Henry Harrison,Ohio,XXXX-XX-XX,XXXX-XX-XX
+William McKinley,Ohio,XXXX-XX-XX,XXXX-XX-XX
+William Howard Taft,Ohio,XXXX-XX-XX,XXXX-XX-XX
+
+# Change date formats from m/d/y to y-m-d
+>sed -r 's+([0-9]{2})/([0-9]{2})/([0-9]{4})+\3-\1-\2+g' presidents.csv | grep William
+William Henry Harrison,Ohio,1773-02-09,1841-04-04
+William McKinley,Ohio,1843-01-29,1901-09-14
+William Howard Taft,Ohio,1857-09-15,1930-03-08
+----
+
+.*awk example*
+Sample awk script, presidents.awk
+
+All awk scripts are a sequence of /pattern/ {action} pairs.
+BEGIN and END are executed once. All other blocks are executed for every input line.
+----
+BEGIN {
+  previous = "None";
+}
+
+# Ignore the header line (just "State" at this point)
+! /^State$/ {
+  current = $0;    # $0 is the whole line, which is just a state
+  if (current != previous) {
+    if (count > 0) { print count, previous; }
+    previous = current;
+    count = 0;
+  }
+  count++;
+  total++;
+}
+
+END {
+  print count, previous;
+  print total, "Total";
+}
+
+----
+
+First 'awk' just extracts the State names.
+Have to sort them to get all the state names grouped together.
+Second 'awk' runs the awk script above to count state names.
+----
+>awk -F ',' '{print $2}' presidents.csv | sort | awk -f presidents.awk
+1 Arkansas
+3 California
+1 Georgia
+3 Illinois
+1 Indiana
+1 Kansas
+1 Louisiana
+4 Massachusetts
+1 Michigan
+1 Missouri
+1 New Hampshire
+1 New Jersey
+7 New York
+6 Ohio
+1 Pennsylvania
+3 Tennessee
+3 Texas
+5 Virginia
+44 Total
+----
+
+==== 3.9 Identify the information that a regular expression will return
+
+.*REGEX GOLF*
+|===
+a|image::https://imgs.xkcd.com/comics/regex_golf.png[XKCD,width=600,float="left"]
+|===
+
+https://alf.nu/RegexGolf
+
+
+{empty} +
+
+ifdef::backend-docbook[]
+[index]
+Example Index
+////////////////////////////////////////////////////////////////
+The index is normally left completely empty, it's contents being
+generated automatically by the DocBook toolchain.
+////////////////////////////////////////////////////////////////
+endif::backend-docbook[]
+
+[bibliography]
+==== References
+- [[[1]]] “Unix shell,” Wikipedia, 03-May-2017. [Online]. Available: https://en.wikipedia.org/wiki/Unix_shell. [Accessed: 04-May-2017].
+- [[[2]]] “Differences Between Unix Shells,” Differences Between Unix Shells, 2002. [Online]. Available: http://www.ugrad.cs.ubc.ca/~cs219/CourseNotes/Unix/shell-Differences.html. [Accessed: 04-May-2017].
+- [[[3]]] P. Ward, “Shell startup scripts,” flowbloks blog Atom, 17-Feb-2013. [Online]. Available: http://blog.flowblok.id.au/2013-02/shell-startup-scripts.html. [Accessed: 09-May-2017]. 
+- [[[4]]] M. Fitzgerald, Learning regular expressions: Beijing: O'Reilly, 2012. 
